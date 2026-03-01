@@ -1,3 +1,4 @@
+import { usePostAuthLogin } from '@/api/generated/auth/auth'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   Zap,
@@ -11,6 +12,10 @@ import {
 export const Route = createFileRoute('/')({ component: App })
 
 function App() {
+
+  const { data, isPending, isError } = usePostAuthLogin();
+
+
   const features = [
     {
       icon: <Zap className="w-12 h-12 text-cyan-400" />,
