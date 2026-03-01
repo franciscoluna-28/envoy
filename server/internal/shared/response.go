@@ -7,17 +7,13 @@ import (
 
 type ErrorCode string
 
-type ValidationError struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
-}
-
 const (
 	ErrBadRequest     ErrorCode = "bad_request"
 	ErrInvalidInput   ErrorCode = "invalid_input"
 	ErrUnauthorized   ErrorCode = "unauthorized"
 	ErrInternalServer ErrorCode = "internal_server_error"
 	ErrNotFound       ErrorCode = "not_found"
+	ErrConflict       ErrorCode = "conflict"
 )
 
 type APIResponse struct {
@@ -30,7 +26,7 @@ type APIResponse struct {
 }
 
 func Success(w http.ResponseWriter, status int, data any, message string) {
-	send(w, status, APIResponse{
+	Send(w, status, APIResponse{
 		Status:  status,
 		Data:    data,
 		Message: message,
@@ -39,7 +35,7 @@ func Success(w http.ResponseWriter, status int, data any, message string) {
 }
 
 func BadRequest(w http.ResponseWriter, err ErrorCode, validationErrors []ValidationError) {
-	send(w, http.StatusBadRequest, APIResponse{
+	Send(w, http.StatusBadRequest, APIResponse{
 		Status:  http.StatusBadRequest,
 		Error:   err,
 		Errors:  validationErrors,
@@ -49,14 +45,14 @@ func BadRequest(w http.ResponseWriter, err ErrorCode, validationErrors []Validat
 
 // Never expose internal database/message queues/system errors to the client. EVER.
 func InternalError(w http.ResponseWriter) {
-	send(w, http.StatusInternalServerError, APIResponse{
+	Send(w, http.StatusInternalServerError, APIResponse{
 		Status:  http.StatusInternalServerError,
 		Error:   "internal server error",
 		Success: false,
 	})
 }
 
-func send(w http.ResponseWriter, status int, res APIResponse) {
+func Send(w http.ResponseWriter, status int, res APIResponse) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(res)

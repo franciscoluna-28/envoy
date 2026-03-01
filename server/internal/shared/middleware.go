@@ -1,0 +1,87 @@
+package shared
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"time"
+
+	auth "github.com/franciscoluna/envoy/server/internal/api/auth/domain"
+	"github.com/go-chi/cors"
+)
+
+func WithBody[T any](h func(w http.ResponseWriter, r *http.Request, body T) error) func(http.ResponseWriter, *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		var body T
+		if err := Decode(r, &body); err != nil {
+			return err
+		}
+		if err := Validate(body); err != nil {
+			BadRequest(w, ErrInvalidInput, MapValidationErrors(err))
+			return nil
+		}
+		return h(w, r, body)
+	}
+}
+
+func AuthMiddleware(authService auth.TokenProvider) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cookie, err := r.Cookie(auth.AuthCookieName)
+			if err != nil {
+				BadRequest(w, ErrUnauthorized, nil)
+				return
+			}
+
+			claims, err := authService.ParseToken(cookie.Value)
+			if err != nil {
+				BadRequest(w, ErrUnauthorized, nil)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), "user_id", claims["sub"])
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func Logger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		next.ServeHTTP(w, r)
+
+		duration := time.Since(start)
+		fmt.Printf("[%s] %s %s | %v\n",
+			time.Now().Format(time.RFC3339),
+			r.Method,
+			r.URL.Path,
+			duration,
+		)
+	})
+}
+
+func Recoverer(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Printf("PANIC RECOVERED: %v\n", err)
+
+				InternalError(w)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
+func CORS() func(http.Handler) http.Handler {
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: true,
+		Debug:            false,
+	})
+
+	return c.Handler
+}
