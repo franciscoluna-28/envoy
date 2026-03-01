@@ -1,0 +1,136 @@
+basePath: /api/v1
+definitions:
+  application.AuthRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  application.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+    type: object
+  shared.APIResponse:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/shared.ErrorCode'
+      errors:
+        items:
+          $ref: '#/definitions/shared.ValidationError'
+        type: array
+      message:
+        type: string
+      status:
+        type: integer
+      success:
+        type: boolean
+    type: object
+  shared.ErrorCode:
+    enum:
+    - bad_request
+    - invalid_input
+    - unauthorized
+    - internal_server_error
+    - not_found
+    - conflict
+    type: string
+    x-enum-varnames:
+    - ErrBadRequest
+    - ErrInvalidInput
+    - ErrUnauthorized
+    - ErrInternalServer
+    - ErrNotFound
+    - ErrConflict
+  shared.ValidationError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Envoy API.
+  termsOfService: http://swagger.io/terms/
+  title: Envoy API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Grants access to an existing user within the system
+      parameters:
+      - description: Credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/application.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/shared.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/application.UserResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      summary: Login user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user within the system
+      parameters:
+      - description: Credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/application.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/shared.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/application.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      summary: Register user
+      tags:
+      - auth
+swagger: "2.0"

@@ -44,6 +44,11 @@ tidy: ## Tidy go.mod dependencies
 	@echo "Tidying dependencies..."
 	go mod tidy
 
+# Generate OpenAPI/Swagger documentation
+docs: ## Generate API documentation
+	@echo "Generating API documentation..."
+	swag init -g main.go
+
 # Setup development environment
 setup: install-air tidy ## Setup development environment
 	@echo "Development environment setup complete!"
@@ -54,3 +59,4 @@ setup-simple: tidy ## Simple setup without air
 	@echo "Simple setup complete!"
 	@echo "Run 'make run' for development without hot reload"
 	@echo "To install air manually: go install github.com/air-verse/air@latest"
+
