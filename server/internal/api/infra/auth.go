@@ -1,8 +1,9 @@
 package infra
 
 import (
-	"server/internal/api/domain"
 	"time"
+
+	"github.com/franciscoluna/envoy/server/internal/api/domain"
 
 	"github.com/golang-jwt/jwt/v5"
 )

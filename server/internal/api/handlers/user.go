@@ -2,15 +2,35 @@ package handlers
 
 import (
 	"net/http"
-	infra "server/internal/api/infra"
-	web "server/internal/api/infra"
-	"server/internal/api/usecases"
 	"time"
+
+	"github.com/franciscoluna/envoy/server/internal/api/domain"
+	"github.com/franciscoluna/envoy/server/internal/api/infra"
+	"github.com/franciscoluna/envoy/server/internal/api/usecases"
 )
+
+func setAuthCookie(w http.ResponseWriter, token string, secure bool) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    token,
+		Expires:  time.Now().Add(168 * time.Hour), // 7 days
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+	})
+}
 
 type RegisterHandler struct {
 	useCase     *usecases.RegisterWithEmailUseCase
 	authService *infra.AuthService
+}
+
+func NewRegisterHandler(uc *usecases.RegisterWithEmailUseCase, auth *infra.AuthService) *RegisterHandler {
+	return &RegisterHandler{
+		useCase:     uc,
+		authService: auth,
+	}
 }
 
 func (h *RegisterHandler) Handle(w http.ResponseWriter, r *http.Request) error {
@@ -19,10 +39,15 @@ func (h *RegisterHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 		Password string `json:"password" validate:"required,min=8"`
 	}
 
-	isProd := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" // TODO: Improve this implementation
-
-	if err := web.Decode(r, &body); err != nil {
+	if err := infra.Decode(r, &body); err != nil {
 		return err
+	}
+
+	if err := infra.Validate(body); err != nil {
+		infra.JSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errors": infra.MapValidationErrors(err),
+		})
+		return nil
 	}
 
 	user, err := h.useCase.Execute(r.Context(), body.Email, body.Password)
@@ -34,17 +59,12 @@ func (h *RegisterHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    token,
-		Expires:  time.Now().Add(168 * time.Hour),
-		HttpOnly: true,
-		Secure:   isProd,
-		SameSite: http.SameSiteLaxMode,
-		Path:     "/",
-	})
 
-	infra.JSON(w, http.StatusCreated, user)
+	isProd := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+
+	setAuthCookie(w, token, isProd)
+
+	infra.JSON(w, http.StatusCreated, domain.NewUserResponse(user))
 	return nil
 }
 
@@ -69,6 +89,12 @@ func (h *LoginHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 	if err := infra.Decode(r, &body); err != nil {
 		return err
 	}
+	if err := infra.Validate(body); err != nil {
+		infra.JSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errors": infra.MapValidationErrors(err),
+		})
+		return nil
+	}
 
 	user, err := h.useCase.Execute(r.Context(), body.Email, body.Password)
 	if err != nil {
@@ -81,17 +107,8 @@ func (h *LoginHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	isProd := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	setAuthCookie(w, token, isProd)
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    token,
-		Expires:  time.Now().Add(168 * time.Hour),
-		HttpOnly: true,
-		Secure:   isProd,
-		SameSite: http.SameSiteLaxMode,
-		Path:     "/",
-	})
-
-	infra.JSON(w, http.StatusOK, user)
+	infra.JSON(w, http.StatusOK, domain.NewUserResponse(user))
 	return nil
 }

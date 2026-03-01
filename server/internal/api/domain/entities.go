@@ -16,10 +16,10 @@ const (
 )
 
 type User struct {
-	ID           UserID    `json:"id"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"-"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           UserID    `json:"id"            db:"id"`
+	Email        string    `json:"email"         db:"email"`
+	PasswordHash string    `json:"-"             db:"password_hash"`
+	CreatedAt    time.Time `json:"created_at"    db:"created_at"`
 }
 
 type Project struct {

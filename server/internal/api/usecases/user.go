@@ -2,9 +2,10 @@ package usecases
 
 import (
 	"context"
-	"server/internal/api/domain"
-	"server/internal/api/repositories"
 	"time"
+
+	"github.com/franciscoluna/envoy/server/internal/api/domain"
+	"github.com/franciscoluna/envoy/server/internal/api/repositories"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"

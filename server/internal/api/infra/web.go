@@ -3,6 +3,7 @@ package infra
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request) error
@@ -16,6 +17,15 @@ func Action(h HandlerFunc) http.HandlerFunc {
 }
 
 func Decode(r *http.Request, v any) error {
+	if r.ContentLength == 0 {
+		return json.NewDecoder(strings.NewReader("")).Decode(v)
+	}
+
+	if r.Body == nil {
+		return json.NewDecoder(strings.NewReader("")).Decode(v)
+	}
+	defer r.Body.Close()
+
 	return json.NewDecoder(r.Body).Decode(v)
 }
 

@@ -2,7 +2,8 @@ package repositories
 
 import (
 	"context"
-	"server/internal/api/domain"
+
+	"github.com/franciscoluna/envoy/server/internal/api/domain"
 
 	"github.com/jmoiron/sqlx"
 )
