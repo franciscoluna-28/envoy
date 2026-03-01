@@ -3,20 +3,16 @@ package infra
 import (
 	"fmt"
 
+	"github.com/franciscoluna/envoy/server/internal/shared"
 	"github.com/go-playground/validator/v10"
 )
 
-type ValidationError struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
-}
-
-func MapValidationErrors(err error) []ValidationError {
-	var errs []ValidationError
+func MapValidationErrors(err error) []shared.ValidationError {
+	var errs []shared.ValidationError
 
 	if validationErrs, ok := err.(validator.ValidationErrors); ok {
 		for _, f := range validationErrs {
-			errs = append(errs, ValidationError{
+			errs = append(errs, shared.ValidationError{
 				Field:   f.Field(),
 				Message: getErrorMessage(f),
 			})

@@ -2,24 +2,12 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
-	"github.com/franciscoluna/envoy/server/internal/api/domain"
+	"github.com/franciscoluna/envoy/server/internal/api/dto"
 	"github.com/franciscoluna/envoy/server/internal/api/infra"
 	"github.com/franciscoluna/envoy/server/internal/api/usecases"
+	"github.com/franciscoluna/envoy/server/internal/shared"
 )
-
-func setAuthCookie(w http.ResponseWriter, token string, secure bool) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    token,
-		Expires:  time.Now().Add(168 * time.Hour), // 7 days
-		HttpOnly: true,
-		Secure:   secure,
-		SameSite: http.SameSiteLaxMode,
-		Path:     "/",
-	})
-}
 
 type RegisterHandler struct {
 	useCase     *usecases.RegisterWithEmailUseCase
@@ -34,19 +22,14 @@ func NewRegisterHandler(uc *usecases.RegisterWithEmailUseCase, auth *infra.AuthS
 }
 
 func (h *RegisterHandler) Handle(w http.ResponseWriter, r *http.Request) error {
-	var body struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required,min=8"`
-	}
+	var body dto.AuthRequest
 
 	if err := infra.Decode(r, &body); err != nil {
 		return err
 	}
 
 	if err := infra.Validate(body); err != nil {
-		infra.JSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errors": infra.MapValidationErrors(err),
-		})
+		shared.BadRequest(w, "invalid_input", infra.MapValidationErrors(err))
 		return nil
 	}
 
@@ -61,10 +44,9 @@ func (h *RegisterHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	isProd := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	infra.SetAuthCookie(w, token, isProd)
 
-	setAuthCookie(w, token, isProd)
-
-	infra.JSON(w, http.StatusCreated, domain.NewUserResponse(user))
+	shared.Success(w, http.StatusCreated, dto.NewUserResponse(user), "user registered successfully")
 	return nil
 }
 
@@ -81,21 +63,16 @@ func NewLoginHandler(uc *usecases.LoginWithEmailUseCase, auth *infra.AuthService
 }
 
 func (h *LoginHandler) Handle(w http.ResponseWriter, r *http.Request) error {
-	var body struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
-	}
+	var body dto.AuthRequest
 
 	if err := infra.Decode(r, &body); err != nil {
 		return err
 	}
+
 	if err := infra.Validate(body); err != nil {
-		infra.JSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errors": infra.MapValidationErrors(err),
-		})
+		shared.BadRequest(w, "invalid_credentials_format", infra.MapValidationErrors(err))
 		return nil
 	}
-
 	user, err := h.useCase.Execute(r.Context(), body.Email, body.Password)
 	if err != nil {
 		return err
@@ -107,8 +84,8 @@ func (h *LoginHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	isProd := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
-	setAuthCookie(w, token, isProd)
+	infra.SetAuthCookie(w, token, isProd)
 
-	infra.JSON(w, http.StatusOK, domain.NewUserResponse(user))
+	shared.Success(w, http.StatusOK, dto.NewUserResponse(user), "Login successful")
 	return nil
 }
