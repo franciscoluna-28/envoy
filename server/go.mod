@@ -3,6 +3,7 @@ module github.com/franciscoluna/envoy/server
 go 1.25.0
 
 require (
+	github.com/danielgtaylor/huma/v2 v2.37.2
 	github.com/joho/godotenv v1.5.1
 	github.com/swaggo/swag v1.8.1
 	gorm.io/driver/sqlite v1.6.0
@@ -13,7 +14,7 @@ require (
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/spec v0.20.6 // indirect
@@ -28,8 +29,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
-	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/tools v0.41.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -50,7 +49,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/swaggo/http-swagger v1.3.4
 	golang.org/x/crypto v0.48.0
 	golang.org/x/text v0.34.0 // indirect
 )

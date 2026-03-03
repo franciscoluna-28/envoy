@@ -10,13 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/franciscoluna/envoy/server/docs"
-
 	"github.com/franciscoluna/envoy/server/internal/api/auth/application"
 	auth "github.com/franciscoluna/envoy/server/internal/api/auth/domain"
 	"github.com/franciscoluna/envoy/server/internal/api/auth/infra"
 	"github.com/franciscoluna/envoy/server/internal/shared"
-	httpSwagger "github.com/swaggo/http-swagger"
+
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
@@ -104,13 +104,29 @@ func (a *App) setupRouter() http.Handler {
 	router.Use(shared.Logger)
 	router.Use(shared.CORS())
 
-	router.Get("/swagger/*", httpSwagger.WrapHandler)
+	// Set up Huma API
+	config := huma.DefaultConfig("Envoy API", "1.0.0")
+	config.Info.Description = "Envoy API"
+	config.OpenAPIPath = "/openapi"
+	config.DocsPath = "/docs"
+	config.Servers = []*huma.Server{
+		{URL: "http://localhost:8080"},
+	}
+	api := humachi.New(router, config)
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		shared.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	infra.RegisterRoutes(router, a.authService, regUC, loginUC)
+	// Add OpenAPI JSON endpoint manually
+	router.Get("/openapi", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		shared.JSON(w, http.StatusOK, api.OpenAPI())
+	})
+
+	infra.RegisterRoutes(api, a.authService, regUC, loginUC)
+
+	router.With(shared.AuthMiddleware(a.authService)).Handle("/api/v1/me", api.Adapter())
 
 	return router
 }
@@ -155,13 +171,6 @@ func (a *App) shutdown(ctx context.Context) error {
 	return nil
 }
 
-// @title           Envoy API
-// @version         1.0
-// @description     Envoy API.
-// @termsOfService  http://swagger.io/terms/
-
-// @host      localhost:8080
-// @BasePath  /api/v1
 func main() {
 	config := loadConfig()
 	app, err := NewApp(config)

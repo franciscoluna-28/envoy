@@ -3,46 +3,43 @@ package infra
 import (
 	"net/http"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/franciscoluna/envoy/server/internal/api/auth/application"
 	auth "github.com/franciscoluna/envoy/server/internal/api/auth/domain"
-	"github.com/franciscoluna/envoy/server/internal/shared"
-
-	"github.com/go-chi/chi/v5"
 )
 
-func RegisterRoutes(r chi.Router, authService auth.TokenProvider, regUC *application.RegisterWithEmailUseCase, loginUC *application.LoginWithEmailUseCase) {
+func RegisterRoutes(api huma.API, authService auth.TokenProvider, regUC *application.RegisterWithEmailUseCase, loginUC *application.LoginWithEmailUseCase) {
 	regHandler := NewRegisterHandler(regUC, authService)
 	loginHandler := NewLoginHandler(loginUC, authService)
+	userHandler := NewUserHandler(authService)
 
-	userHandler := NewUserHandler()
+	huma.Register(api, huma.Operation{
+		OperationID: "post-register",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/auth/register",
+		Summary:     "Register user",
+		Description: "Creates a new user within the system",
+		Tags:        []string{"Auth"},
+	}, regHandler.Handle)
 
-	r.Route("/api/v1", func(r chi.Router) {
-		r.Route("/auth", func(r chi.Router) {
-			r.Post("/register", makeHandler(shared.WithBody(regHandler.Handle)))
-			r.Post("/login", makeHandler(shared.WithBody(loginHandler.Handle)))
-		})
+	huma.Register(api, huma.Operation{
+		OperationID: "post-login",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/auth/login",
+		Summary:     "Login user",
+		Description: "Grants access to an existing user within the system",
+		Tags:        []string{"Auth"},
+	}, loginHandler.Handle)
 
-		r.Group(func(r chi.Router) {
-			r.Use(shared.AuthMiddleware(authService))
-			r.Get("/me", makeHandler(userHandler.Me))
-		})
-	})
-}
-
-func makeHandler(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := h(w, r); err != nil {
-			if appErr, ok := err.(*shared.AppError); ok {
-				shared.Send(w, appErr.Status, shared.APIResponse{
-					Status:  appErr.Status,
-					Error:   appErr.Code,
-					Message: appErr.Msg,
-					Success: false,
-				})
-				return
-			}
-
-			shared.InternalError(w)
-		}
-	}
+	huma.Register(api, huma.Operation{
+		OperationID: "get-me",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/me",
+		Summary:     "Get current user",
+		Description: "Get the current authenticated user's profile",
+		Tags:        []string{"User"},
+		Security: []map[string][]string{
+			{"bearerAuth": {}},
+		},
+	}, userHandler.Handle)
 }

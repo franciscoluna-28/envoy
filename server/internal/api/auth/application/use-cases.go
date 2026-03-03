@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	auth "github.com/franciscoluna/envoy/server/internal/api/auth/domain"
@@ -28,9 +29,12 @@ func NewLoginWithEmailUseCase(r auth.UserRepository) *LoginWithEmailUseCase {
 }
 
 func (uc *RegisterWithEmailUseCase) Execute(ctx context.Context, email string, rawPassword string) (*auth.User, error) {
+	fmt.Printf("Execute called with email: %s, password length: %d\n", email, len(rawPassword))
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(rawPassword), bcrypt.DefaultCost)
 
 	if err != nil {
+		fmt.Printf("bcrypt error: %v\n", err)
 		return nil, shared.NewAppError(500, shared.ErrInternalServer, "failed to process password")
 	}
 
@@ -41,12 +45,15 @@ func (uc *RegisterWithEmailUseCase) Execute(ctx context.Context, email string, r
 		CreatedAt:    time.Now(),
 	}
 
+	fmt.Printf("About to call userRepo.Create with user: %+v\n", user)
 	err = uc.userRepo.Create(ctx, user)
 
 	if err != nil {
+		fmt.Printf("userRepo.Create error: %v\n", err)
 		return nil, shared.NewAppError(409, shared.ErrConflict, "user already exists")
 	}
 
+	fmt.Printf("User created successfully: %+v\n", user)
 	return user, nil
 }
 

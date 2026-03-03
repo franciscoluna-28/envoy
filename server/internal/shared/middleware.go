@@ -14,11 +14,10 @@ func WithBody[T any](h func(w http.ResponseWriter, r *http.Request, body T) erro
 	return func(w http.ResponseWriter, r *http.Request) error {
 		var body T
 		if err := Decode(r, &body); err != nil {
-			return err
+			return NewAppError(http.StatusBadRequest, ErrInvalidInput, fmt.Sprintf("Invalid request body: %v", err))
 		}
 		if err := Validate(body); err != nil {
-			BadRequest(w, ErrInvalidInput, MapValidationErrors(err))
-			return nil
+			return NewAppError(http.StatusBadRequest, ErrInvalidInput, fmt.Sprintf("Validation failed: %v", err))
 		}
 		return h(w, r, body)
 	}
@@ -76,7 +75,7 @@ func Recoverer(next http.Handler) http.Handler {
 
 func CORS() func(http.Handler) http.Handler {
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
