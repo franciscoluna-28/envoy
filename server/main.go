@@ -14,9 +14,7 @@ import (
 	auth "github.com/franciscoluna/envoy/server/internal/api/auth/domain"
 	"github.com/franciscoluna/envoy/server/internal/api/auth/infra"
 	"github.com/franciscoluna/envoy/server/internal/shared"
-
-	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/adapters/humachi"
+	httpSwagger "github.com/swaggo/http-swagger"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
@@ -104,29 +102,19 @@ func (a *App) setupRouter() http.Handler {
 	router.Use(shared.Logger)
 	router.Use(shared.CORS())
 
-	// Set up Huma API
-	config := huma.DefaultConfig("Envoy API", "1.0.0")
-	config.Info.Description = "Envoy API"
-	config.OpenAPIPath = "/openapi"
-	config.DocsPath = "/docs"
-	config.Servers = []*huma.Server{
-		{URL: "http://localhost:8080"},
-	}
-	api := humachi.New(router, config)
-
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		shared.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	// Add OpenAPI JSON endpoint manually
-	router.Get("/openapi", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		shared.JSON(w, http.StatusOK, api.OpenAPI())
+	// Swagger documentation endpoint
+	// Serve Swagger UI at /swagger/* using swaggo/http-swagger
+	router.Get("/swagger/*", httpSwagger.WrapHandler)
+	// Serve the Swagger JSON documentation
+	router.Get("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./docs/swagger.json")
 	})
 
-	infra.RegisterRoutes(api, a.authService, regUC, loginUC)
-
-	router.With(shared.AuthMiddleware(a.authService)).Handle("/api/v1/me", api.Adapter())
+	infra.RegisterRoutes(router, a.authService, regUC, loginUC)
 
 	return router
 }

@@ -1,6 +1,24 @@
-basePath: /api/v1
 definitions:
-  application.AuthRequest:
+  application.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+    type: object
+  infra.LoginInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  infra.RegisterInput:
     properties:
       email:
         type: string
@@ -10,15 +28,6 @@ definitions:
     required:
     - email
     - password
-    type: object
-  application.UserResponse:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      id:
-        type: string
     type: object
   shared.APIResponse:
     properties:
@@ -59,26 +68,21 @@ definitions:
       message:
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
-  description: Envoy API.
-  termsOfService: http://swagger.io/terms/
-  title: Envoy API
-  version: "1.0"
 paths:
-  /auth/login:
+  /api/v1/auth/login:
     post:
       consumes:
       - application/json
       description: Grants access to an existing user within the system
       parameters:
-      - description: Credentials
+      - description: Request body
         in: body
-        name: user
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/application.AuthRequest'
+          $ref: '#/definitions/infra.LoginInput'
       produces:
       - application/json
       responses:
@@ -91,25 +95,50 @@ paths:
                 data:
                   $ref: '#/definitions/application.UserResponse'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
       summary: Login user
       tags:
-      - auth
-  /auth/register:
+      - Auth
+  /api/v1/auth/logout:
+    post:
+      description: Clears authentication cookie to log the user out
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      summary: Logout user
+      tags:
+      - Auth
+  /api/v1/auth/register:
     post:
       consumes:
       - application/json
       description: Creates a new user within the system
       parameters:
-      - description: Credentials
+      - description: Request body
         in: body
-        name: user
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/application.AuthRequest'
+          $ref: '#/definitions/infra.RegisterInput'
       produces:
       - application/json
       responses:
@@ -126,11 +155,35 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/shared.APIResponse'
-        "409":
-          description: Conflict
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/shared.APIResponse'
       summary: Register user
       tags:
-      - auth
+      - Auth
+  /api/v1/me:
+    get:
+      description: Get the current authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/shared.APIResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - User
 swagger: "2.0"

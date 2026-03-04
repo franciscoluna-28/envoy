@@ -1,66 +1,22 @@
 package infra
 
 import (
-	"context"
-	"fmt"
 	"net/http"
+	"time"
 
-	"github.com/danielgtaylor/huma/v2"
 	"github.com/franciscoluna/envoy/server/internal/api/auth/application"
 	auth "github.com/franciscoluna/envoy/server/internal/api/auth/domain"
 	"github.com/franciscoluna/envoy/server/internal/shared"
 )
 
 type RegisterInput struct {
-	Body struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required,min=8"`
-	}
-}
-
-type RegisterOutput struct {
-	Body struct {
-		Status  int                      `json:"status"`
-		Message string                   `json:"message"`
-		Data    application.UserResponse `json:"data,omitempty"`
-		Success bool                     `json:"success"`
-	}
-	SetCookie http.Cookie `header:"Set-Cookie,omitempty"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 type LoginInput struct {
-	Body struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
-	}
-}
-
-type LoginOutput struct {
-	Body struct {
-		Status  int                      `json:"status"`
-		Message string                   `json:"message"`
-		Data    application.UserResponse `json:"data,omitempty"`
-		Success bool                     `json:"success"`
-	}
-	SetCookie http.Cookie `header:"Set-Cookie,omitempty"`
-}
-
-type MeOutput struct {
-	Body struct {
-		Status  int         `json:"status"`
-		Message string      `json:"message"`
-		Data    interface{} `json:"data,omitempty"`
-		Success bool        `json:"success"`
-	}
-}
-
-type ErrorOutput struct {
-	Body struct {
-		Status  int                      `json:"status"`
-		Message string                   `json:"message"`
-		Errors  []map[string]interface{} `json:"errors,omitempty"`
-		Success bool                     `json:"success"`
-	}
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
 type RegisterHandler struct {
@@ -75,22 +31,49 @@ func NewRegisterHandler(uc *application.RegisterWithEmailUseCase, auth auth.Toke
 	}
 }
 
-func (h *RegisterHandler) Handle(ctx context.Context, input *RegisterInput) (*RegisterOutput, error) {
-	user, err := h.useCase.Execute(ctx, input.Body.Email, input.Body.Password)
+// Handle godoc
+// @Summary      Register user
+// @Description  Creates a new user within the system
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body RegisterInput true "Request body"
+// @Success      201  {object}  shared.APIResponse{data=application.UserResponse}
+// @Failure      400  {object}  shared.APIResponse
+// @Failure      500  {object}  shared.APIResponse
+// @Router       /api/v1/auth/register [post]
+func (h *RegisterHandler) Handle(w http.ResponseWriter, r *http.Request) error {
+	var input RegisterInput
+	if err := shared.Decode(r, &input); err != nil {
+		shared.BadRequest(w, shared.ErrInvalidInput, nil)
+		return nil
+	}
+
+	if err := shared.Validate(&input); err != nil {
+		shared.BadRequest(w, shared.ErrInvalidInput, nil)
+		return nil
+	}
+
+	user, err := h.useCase.Execute(r.Context(), input.Email, input.Password)
 	if err != nil {
-		// Handle AppError properly for Huma
 		if appErr, ok := err.(*shared.AppError); ok {
-			return nil, huma.NewError(appErr.Status, appErr.Msg)
+			shared.Send(w, appErr.Status, shared.APIResponse{
+				Status:  appErr.Status,
+				Message: appErr.Msg,
+				Success: false,
+			})
+			return nil
 		}
-		return nil, err
+		shared.InternalError(w)
+		return nil
 	}
 
 	token, err := h.authService.GenerateToken(user)
 	if err != nil {
-		return nil, huma.NewError(http.StatusInternalServerError, "Failed to generate token")
+		shared.InternalError(w)
+		return nil
 	}
 
-	// Create the cookie
 	cookie := http.Cookie{
 		Name:     auth.AuthCookieName,
 		Value:    token,
@@ -99,21 +82,10 @@ func (h *RegisterHandler) Handle(ctx context.Context, input *RegisterInput) (*Re
 		Secure:   false, // false during development, true in production
 		SameSite: http.SameSiteLaxMode,
 	}
+	http.SetCookie(w, &cookie)
 
-	return &RegisterOutput{
-		Body: struct {
-			Status  int                      `json:"status"`
-			Message string                   `json:"message"`
-			Data    application.UserResponse `json:"data,omitempty"`
-			Success bool                     `json:"success"`
-		}{
-			Status:  http.StatusCreated,
-			Message: "User registered successfully",
-			Data:    application.NewUserResponse(user),
-			Success: true,
-		},
-		SetCookie: cookie,
-	}, nil
+	shared.Success(w, http.StatusCreated, application.NewUserResponse(user), "User registered successfully")
+	return nil
 }
 
 type LoginHandler struct {
@@ -128,22 +100,50 @@ func NewLoginHandler(uc *application.LoginWithEmailUseCase, auth auth.TokenProvi
 	}
 }
 
-func (h *LoginHandler) Handle(ctx context.Context, input *LoginInput) (*LoginOutput, error) {
-	user, err := h.useCase.Execute(ctx, input.Body.Email, input.Body.Password)
+// Handle godoc
+// @Summary      Login user
+// @Description  Grants access to an existing user within the system
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body LoginInput true "Request body"
+// @Success      200  {object}  shared.APIResponse{data=application.UserResponse}
+// @Failure      400  {object}  shared.APIResponse
+// @Failure      401  {object}  shared.APIResponse
+// @Failure      500  {object}  shared.APIResponse
+// @Router       /api/v1/auth/login [post]
+func (h *LoginHandler) Handle(w http.ResponseWriter, r *http.Request) error {
+	var input LoginInput
+	if err := shared.Decode(r, &input); err != nil {
+		shared.BadRequest(w, shared.ErrInvalidInput, nil)
+		return nil
+	}
+
+	if err := shared.Validate(&input); err != nil {
+		shared.BadRequest(w, shared.ErrInvalidInput, nil)
+		return nil
+	}
+
+	user, err := h.useCase.Execute(r.Context(), input.Email, input.Password)
 	if err != nil {
-		// Handle AppError properly for Huma
 		if appErr, ok := err.(*shared.AppError); ok {
-			return nil, huma.NewError(appErr.Status, appErr.Msg)
+			shared.Send(w, appErr.Status, shared.APIResponse{
+				Status:  appErr.Status,
+				Message: appErr.Msg,
+				Success: false,
+			})
+			return nil
 		}
-		return nil, err
+		shared.InternalError(w)
+		return nil
 	}
 
 	token, err := h.authService.GenerateToken(user)
 	if err != nil {
-		return nil, huma.NewError(http.StatusInternalServerError, "Failed to generate token")
+		shared.InternalError(w)
+		return nil
 	}
 
-	// Create the cookie
 	cookie := http.Cookie{
 		Name:     auth.AuthCookieName,
 		Value:    token,
@@ -152,21 +152,10 @@ func (h *LoginHandler) Handle(ctx context.Context, input *LoginInput) (*LoginOut
 		Secure:   false, // false during development, true in production
 		SameSite: http.SameSiteLaxMode,
 	}
+	http.SetCookie(w, &cookie)
 
-	return &LoginOutput{
-		Body: struct {
-			Status  int                      `json:"status"`
-			Message string                   `json:"message"`
-			Data    application.UserResponse `json:"data,omitempty"`
-			Success bool                     `json:"success"`
-		}{
-			Status:  http.StatusOK,
-			Message: "Login successful",
-			Data:    application.NewUserResponse(user),
-			Success: true,
-		},
-		SetCookie: cookie,
-	}, nil
+	shared.Success(w, http.StatusOK, application.NewUserResponse(user), "Login successful")
+	return nil
 }
 
 type UserHandler struct {
@@ -179,29 +168,61 @@ func NewUserHandler(authService auth.TokenProvider) *UserHandler {
 	}
 }
 
-func (h *UserHandler) Handle(ctx context.Context, input *struct{}) (*MeOutput, error) {
-	// Try to get the auth cookie from the request
-	// In Huma v2, we need to access the context to get cookies
-	// For now, let's check if user_id is in context (set by middleware)
-	userID := ctx.Value("user_id")
+// LogoutHandler handles clearing the authentication cookie on logout.
+type LogoutHandler struct {
+}
+
+func NewLogoutHandler() *LogoutHandler {
+	return &LogoutHandler{}
+}
+
+// Handle godoc
+// @Summary      Logout user
+// @Description  Clears authentication cookie to log the user out
+// @Tags         Auth
+// @Produce      json
+// @Success      200  {object}  shared.APIResponse
+// @Failure      500  {object}  shared.APIResponse
+// @Router       /api/v1/auth/logout [post]
+func (h *LogoutHandler) Handle(w http.ResponseWriter, r *http.Request) error {
+	// Overwrite the auth cookie with an expired one
+	cookie := http.Cookie{
+		Name:     auth.AuthCookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // keep same flags as other cookies
+		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+	}
+	http.SetCookie(w, &cookie)
+
+	shared.Success(w, http.StatusOK, nil, "Logout successful")
+	return nil
+}
+
+// Handle godoc
+// @Summary      Get current user
+// @Description  Get the current authenticated user's profile
+// @Tags         User
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  shared.APIResponse{data=object}
+// @Failure      401  {object}  shared.APIResponse
+// @Router       /api/v1/me [get]
+func (h *UserHandler) Handle(w http.ResponseWriter, r *http.Request) error {
+	userID := r.Context().Value("user_id")
 	if userID == nil {
-		// If no middleware, try to validate the token manually
-		// Note: Huma v2 doesn't provide direct cookie access in the standard context
-		// We'll need to handle this at the middleware level
-		return nil, fmt.Errorf("unauthorized: no user context found")
+		shared.Send(w, http.StatusUnauthorized, shared.APIResponse{
+			Status:  http.StatusUnauthorized,
+			Error:   shared.ErrUnauthorized,
+			Message: "unauthorized: no user context found",
+			Success: false,
+		})
+		return nil
 	}
 
-	return &MeOutput{
-		Body: struct {
-			Status  int         `json:"status"`
-			Message string      `json:"message"`
-			Data    interface{} `json:"data,omitempty"`
-			Success bool        `json:"success"`
-		}{
-			Status:  http.StatusOK,
-			Message: "User profile retrieved",
-			Data:    map[string]any{"id": userID},
-			Success: true,
-		},
-	}, nil
+	shared.Success(w, http.StatusOK, map[string]any{"id": userID}, "User profile retrieved")
+	return nil
 }

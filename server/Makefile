@@ -45,9 +45,11 @@ tidy: ## Tidy go.mod dependencies
 	go mod tidy
 
 # Generate OpenAPI/Swagger documentation
-docs: ## Generate API documentation
-	@echo "Generating API documentation..."
-	swag init -g main.go
+.PHONY: docs
+docs:
+	swag init -g main.go --parseDependency --parseInternal --outputTypes json,yaml --instanceName swagger --packageName docs --propertyStrategy snakecase
+	swagger2openapi ./docs/swagger.json --outfile ./docs/openapi.json --yaml --patch
+	npx openapi-typescript ./docs/openapi.json -o ../client/src/api/api.ts
 
 # Setup development environment
 setup: install-air tidy ## Setup development environment
