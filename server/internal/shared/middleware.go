@@ -1,12 +1,10 @@
 package shared
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
 
-	auth "github.com/franciscoluna/envoy/server/internal/api/auth/domain"
 	"github.com/go-chi/cors"
 )
 
@@ -20,27 +18,6 @@ func WithBody[T any](h func(w http.ResponseWriter, r *http.Request, body T) erro
 			return NewAppError(http.StatusBadRequest, ErrInvalidInput, fmt.Sprintf("Validation failed: %v", err))
 		}
 		return h(w, r, body)
-	}
-}
-
-func AuthMiddleware(authService auth.TokenProvider) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			cookie, err := r.Cookie(auth.AuthCookieName)
-			if err != nil {
-				BadRequest(w, ErrUnauthorized, nil)
-				return
-			}
-
-			claims, err := authService.ParseToken(cookie.Value)
-			if err != nil {
-				BadRequest(w, ErrUnauthorized, nil)
-				return
-			}
-
-			ctx := context.WithValue(r.Context(), "user_id", claims["sub"])
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
 	}
 }
 
@@ -77,7 +54,7 @@ func CORS() func(http.Handler) http.Handler {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
 		Debug:            false,
 	})

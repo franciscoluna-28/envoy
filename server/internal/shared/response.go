@@ -34,10 +34,11 @@ func Success(w http.ResponseWriter, status int, data any, message string) {
 	})
 }
 
-func BadRequest(w http.ResponseWriter, err ErrorCode, validationErrors []ValidationError) {
+func BadRequest(w http.ResponseWriter, err ErrorCode, message string, validationErrors []ValidationError) {
 	Send(w, http.StatusBadRequest, APIResponse{
 		Status:  http.StatusBadRequest,
 		Error:   err,
+		Message: message,
 		Errors:  validationErrors,
 		Success: false,
 	})
