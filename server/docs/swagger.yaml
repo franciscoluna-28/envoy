@@ -1,14 +1,6 @@
+basePath: /
 definitions:
-  application.UserResponse:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      id:
-        type: string
-    type: object
-  infra.LoginInput:
+  auth.LoginInput:
     properties:
       email:
         type: string
@@ -18,7 +10,7 @@ definitions:
     - email
     - password
     type: object
-  infra.RegisterInput:
+  auth.RegisterInput:
     properties:
       email:
         type: string
@@ -28,6 +20,84 @@ definitions:
     required:
     - email
     - password
+    type: object
+  auth.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+    type: object
+  environments.CertificatesConfig:
+    properties:
+      ca_cert:
+        type: string
+      client_cert:
+        type: string
+      client_key:
+        type: string
+    type: object
+  environments.CreateEnvironmentRequest:
+    properties:
+      certificates:
+        $ref: '#/definitions/environments.CertificatesConfig'
+      connection_url:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: string
+      ssl_mode:
+        enum:
+        - disable
+        - allow
+        - prefer
+        - require
+        - verify-ca
+        - verify-full
+        type: string
+    required:
+    - connection_url
+    - name
+    - project_id
+    type: object
+  environments.DatabaseConnection:
+    properties:
+      certificates_json:
+        type: string
+      connection_string:
+        type: string
+      ssl_mode:
+        type: string
+    required:
+    - connection_string
+    type: object
+  projects.CreateProjectRequest:
+    properties:
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  projects.ProjectDTO:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  projects.UpdateProjectRequest:
+    properties:
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
     type: object
   shared.APIResponse:
     properties:
@@ -68,8 +138,13 @@ definitions:
       message:
         type: string
     type: object
+host: localhost:8080
 info:
-  contact: {}
+  contact:
+    name: API Support
+  description: Envoy API for managing database environments and projects
+  title: Envoy API
+  version: 1.0.0
 paths:
   /api/v1/auth/login:
     post:
@@ -82,7 +157,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/infra.LoginInput'
+          $ref: '#/definitions/auth.LoginInput'
       produces:
       - application/json
       responses:
@@ -93,7 +168,7 @@ paths:
             - $ref: '#/definitions/shared.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/application.UserResponse'
+                  $ref: '#/definitions/auth.UserResponse'
               type: object
         "400":
           description: Bad Request
@@ -138,7 +213,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/infra.RegisterInput'
+          $ref: '#/definitions/auth.RegisterInput'
       produces:
       - application/json
       responses:
@@ -149,7 +224,7 @@ paths:
             - $ref: '#/definitions/shared.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/application.UserResponse'
+                  $ref: '#/definitions/auth.UserResponse'
               type: object
         "400":
           description: Bad Request
@@ -162,6 +237,72 @@ paths:
       summary: Register user
       tags:
       - Auth
+  /api/v1/database/test-connection:
+    post:
+      consumes:
+      - application/json
+      description: Tests if a database connection is valid and has migration permissions
+      parameters:
+      - description: Connection details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environments.DatabaseConnection'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      summary: Test database connection
+      tags:
+      - Database
+  /api/v1/environments:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new database environment for a project
+      parameters:
+      - description: Environment details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environments.CreateEnvironmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      security:
+      - CookieAuth: []
+      summary: Create environment
+      tags:
+      - Environments
   /api/v1/me:
     get:
       description: Get the current authenticated user's profile
@@ -182,8 +323,207 @@ paths:
           schema:
             $ref: '#/definitions/shared.APIResponse'
       security:
-      - BearerAuth: []
+      - CookieAuth: []
       summary: Get current user
       tags:
       - User
+  /api/v1/projects:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all projects belonging to the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/shared.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/projects.ProjectDTO'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      security:
+      - CookieAuth: []
+      summary: List user projects
+      tags:
+      - Projects
+    post:
+      consumes:
+      - application/json
+      description: Creates a new project for the authenticated user
+      parameters:
+      - description: Project details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/projects.CreateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      security:
+      - CookieAuth: []
+      summary: Create project
+      tags:
+      - Projects
+  /api/v1/projects/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a project belonging to the authenticated user
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      security:
+      - CookieAuth: []
+      summary: Delete project
+      tags:
+      - Projects
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific project belonging to the authenticated user
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/shared.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/projects.ProjectDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      security:
+      - CookieAuth: []
+      summary: Get project by ID
+      tags:
+      - Projects
+    put:
+      consumes:
+      - application/json
+      description: Updates a project name belonging to the authenticated user
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated project details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/projects.UpdateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.APIResponse'
+      security:
+      - CookieAuth: []
+      summary: Update project
+      tags:
+      - Projects
+securityDefinitions:
+  CookieAuth:
+    description: Authentication cookie containing JWT token
+    in: cookie
+    name: session_token
+    type: apiKey
 swagger: "2.0"

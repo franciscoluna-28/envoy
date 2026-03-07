@@ -47,7 +47,7 @@ tidy: ## Tidy go.mod dependencies
 # Generate OpenAPI/Swagger documentation
 .PHONY: docs
 docs:
-	swag init -g main.go --parseDependency --parseInternal --outputTypes json,yaml --instanceName swagger --packageName docs --propertyStrategy snakecase
+	swag init -g main.go --parseDependency --parseInternal --outputTypes go,json,yaml --instanceName swagger --packageName docs --propertyStrategy snakecase
 	swagger2openapi ./docs/swagger.json --outfile ./docs/openapi.json --yaml --patch
 	npx openapi-typescript ./docs/openapi.json -o ../client/src/api/api.ts
 

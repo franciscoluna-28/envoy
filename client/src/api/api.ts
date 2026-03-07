@@ -27,7 +27,7 @@ export interface paths {
             /** @description Request body */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["infra.LoginInput"];
+                    "application/json": components["schemas"]["auth.LoginInput"];
                 };
             };
             responses: {
@@ -38,7 +38,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["shared.APIResponse"] & {
-                            data?: components["schemas"]["application.UserResponse"];
+                            data?: components["schemas"]["auth.UserResponse"];
                         };
                     };
                 };
@@ -148,7 +148,7 @@ export interface paths {
             /** @description Request body */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["infra.RegisterInput"];
+                    "application/json": components["schemas"]["auth.RegisterInput"];
                 };
             };
             responses: {
@@ -159,12 +159,145 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["shared.APIResponse"] & {
-                            data?: components["schemas"]["application.UserResponse"];
+                            data?: components["schemas"]["auth.UserResponse"];
                         };
                     };
                 };
                 /** @description Bad Request */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/database/test-connection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test database connection
+         * @description Tests if a database connection is valid and has migration permissions
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Connection details */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["environments.DatabaseConnection"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/environments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create environment
+         * @description Creates a new database environment for a project
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Environment details */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["environments.CreateEnvironmentRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -239,22 +372,373 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List user projects
+         * @description Retrieves all projects belonging to the authenticated user
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"] & {
+                            data?: components["schemas"]["projects.ProjectDTO"][];
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create project
+         * @description Creates a new project for the authenticated user
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Project details */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["projects.CreateProjectRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get project by ID
+         * @description Retrieves a specific project belonging to the authenticated user
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Project ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"] & {
+                            data?: components["schemas"]["projects.ProjectDTO"];
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+            };
+        };
+        /**
+         * Update project
+         * @description Updates a project name belonging to the authenticated user
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Project ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description Updated project details */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["projects.UpdateProjectRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Delete project
+         * @description Deletes a project belonging to the authenticated user
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Project ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.APIResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        "application.UserResponse": {
+        "auth.LoginInput": {
+            email: string;
+            password: string;
+        };
+        "auth.RegisterInput": {
+            email: string;
+            password: string;
+        };
+        "auth.UserResponse": {
             created_at?: string;
             email?: string;
             id?: string;
         };
-        "infra.LoginInput": {
-            email: string;
-            password: string;
+        "environments.CertificatesConfig": {
+            ca_cert?: string;
+            client_cert?: string;
+            client_key?: string;
         };
-        "infra.RegisterInput": {
-            email: string;
-            password: string;
+        "environments.CreateEnvironmentRequest": {
+            certificates?: components["schemas"]["environments.CertificatesConfig"];
+            connection_url: string;
+            name: string;
+            project_id: string;
+            /** @enum {string} */
+            ssl_mode?: "disable" | "allow" | "prefer" | "require" | "verify-ca" | "verify-full";
+        };
+        "environments.DatabaseConnection": {
+            certificates_json?: string;
+            connection_string: string;
+            ssl_mode?: string;
+        };
+        "projects.CreateProjectRequest": {
+            name: string;
+        };
+        "projects.ProjectDTO": {
+            id?: string;
+            name?: string;
+        };
+        "projects.UpdateProjectRequest": {
+            name: string;
         };
         "shared.APIResponse": {
             data?: unknown;
