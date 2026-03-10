@@ -1,6 +1,9 @@
 package projects
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 func CreateProject(ctx context.Context, payload CreateProjectRequest, repo *ProjectRepo, userID string) error {
 	if err := repo.Create(ctx, payload.Name, userID); err != nil {
@@ -23,8 +26,10 @@ func GetProject(ctx context.Context, id string, repo *ProjectRepo, userID string
 		return nil, err
 	}
 	return &ProjectDTO{
-		ID:   project.ID,
-		Name: project.Name,
+		ID:        project.ID,
+		Name:      project.Name,
+		CreatedAt: project.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: project.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -43,8 +48,10 @@ func ListProjectsByUser(ctx context.Context, repo *ProjectRepo, userID string) (
 	var projectDTOs []ProjectDTO
 	for _, project := range projects {
 		projectDTOs = append(projectDTOs, ProjectDTO{
-			ID:   project.ID,
-			Name: project.Name,
+			ID:        project.ID,
+			Name:      project.Name,
+			CreatedAt: project.CreatedAt.Format(time.RFC3339),
+			UpdatedAt: project.UpdatedAt.Format(time.RFC3339),
 		})
 	}
 	return projectDTOs, nil

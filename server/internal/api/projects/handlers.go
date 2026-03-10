@@ -1,15 +1,12 @@
 package projects
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/franciscoluna/envoy/server/internal/shared"
 	"github.com/go-chi/chi/v5"
 )
-
-type UpdateProjectRequest struct {
-	Name string `json:"name" validate:"required,min=1,max=255"`
-}
 
 // CreateProject godoc
 // @Summary      Create project
@@ -24,7 +21,7 @@ type UpdateProjectRequest struct {
 // @Failure      500  {object}  shared.APIResponse
 // @Security     CookieAuth
 // @Router       /api/v1/projects [post]
-func HandleCreateProject(w http.ResponseWriter, r *http.Request) error {
+func HandleCreateProject(w http.ResponseWriter, r *http.Request, repo *ProjectRepo) error {
 	var payload CreateProjectRequest
 
 	if err := shared.Decode(r, &payload); err != nil {
@@ -37,8 +34,12 @@ func HandleCreateProject(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	userID := r.Context().Value("user_id").(string)
-	if err := CreateProject(r.Context(), payload, &ProjectRepo{}, userID); err != nil {
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		shared.InternalError(w)
+		return nil
+	}
+	if err := CreateProject(r.Context(), payload, repo, userID); err != nil {
 		if appErr, ok := err.(*shared.AppError); ok {
 			shared.Send(w, appErr.Status, shared.APIResponse{
 				Status:  appErr.Status,
@@ -70,11 +71,15 @@ func HandleCreateProject(w http.ResponseWriter, r *http.Request) error {
 // @Failure      500  {object}  shared.APIResponse
 // @Security     CookieAuth
 // @Router       /api/v1/projects/{id} [get]
-func HandleGetProject(w http.ResponseWriter, r *http.Request) error {
+func HandleGetProject(w http.ResponseWriter, r *http.Request, repo *ProjectRepo) error {
 	id := chi.URLParam(r, "id")
-	userID := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		shared.InternalError(w)
+		return nil
+	}
 
-	project, err := GetProject(r.Context(), id, &ProjectRepo{}, userID)
+	project, err := GetProject(r.Context(), id, repo, userID)
 	if err != nil {
 		if appErr, ok := err.(*shared.AppError); ok {
 			shared.Send(w, appErr.Status, shared.APIResponse{
@@ -104,11 +109,17 @@ func HandleGetProject(w http.ResponseWriter, r *http.Request) error {
 // @Failure      500  {object}  shared.APIResponse
 // @Security     CookieAuth
 // @Router       /api/v1/projects [get]
-func HandleListProjects(w http.ResponseWriter, r *http.Request) error {
-	userID := r.Context().Value("user_id").(string)
+func HandleListProjects(w http.ResponseWriter, r *http.Request, repo *ProjectRepo) error {
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		shared.InternalError(w)
+		return nil
+	}
 
-	projects, err := ListProjectsByUser(r.Context(), &ProjectRepo{}, userID)
+	projects, err := ListProjectsByUser(r.Context(), repo, userID)
 	if err != nil {
+		// Log the actual error for debugging
+		fmt.Printf("Database error in ListProjectsByUser: %v, userID: %s\n", err, userID)
 		if appErr, ok := err.(*shared.AppError); ok {
 			shared.Send(w, appErr.Status, shared.APIResponse{
 				Status:  appErr.Status,
@@ -141,9 +152,13 @@ func HandleListProjects(w http.ResponseWriter, r *http.Request) error {
 // @Failure      500  {object}  shared.APIResponse
 // @Security     CookieAuth
 // @Router       /api/v1/projects/{id} [put]
-func HandleUpdateProject(w http.ResponseWriter, r *http.Request) error {
+func HandleUpdateProject(w http.ResponseWriter, r *http.Request, repo *ProjectRepo) error {
 	id := chi.URLParam(r, "id")
-	userID := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		shared.InternalError(w)
+		return nil
+	}
 
 	var payload UpdateProjectRequest
 	if err := shared.Decode(r, &payload); err != nil {
@@ -156,7 +171,7 @@ func HandleUpdateProject(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	if err := UpdateProject(r.Context(), id, payload.Name, &ProjectRepo{}, userID); err != nil {
+	if err := UpdateProject(r.Context(), id, payload.Name, repo, userID); err != nil {
 		if appErr, ok := err.(*shared.AppError); ok {
 			shared.Send(w, appErr.Status, shared.APIResponse{
 				Status:  appErr.Status,
@@ -188,11 +203,15 @@ func HandleUpdateProject(w http.ResponseWriter, r *http.Request) error {
 // @Failure      500  {object}  shared.APIResponse
 // @Security     CookieAuth
 // @Router       /api/v1/projects/{id} [delete]
-func HandleDeleteProject(w http.ResponseWriter, r *http.Request) error {
+func HandleDeleteProject(w http.ResponseWriter, r *http.Request, repo *ProjectRepo) error {
 	id := chi.URLParam(r, "id")
-	userID := r.Context().Value("user_id").(string)
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		shared.InternalError(w)
+		return nil
+	}
 
-	if err := DeleteProject(r.Context(), id, &ProjectRepo{}, userID); err != nil {
+	if err := DeleteProject(r.Context(), id, repo, userID); err != nil {
 		if appErr, ok := err.(*shared.AppError); ok {
 			shared.Send(w, appErr.Status, shared.APIResponse{
 				Status:  appErr.Status,

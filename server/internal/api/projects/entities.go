@@ -7,4 +7,5 @@ type Project struct {
 	CreatedBy string    `json:"created_by"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

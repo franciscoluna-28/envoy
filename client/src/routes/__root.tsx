@@ -30,4 +30,4 @@ function RootComponent() {
       />
     </QueryClientProvider>
   )
-}
+  }

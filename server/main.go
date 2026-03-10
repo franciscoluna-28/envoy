@@ -24,6 +24,7 @@ import (
 	_ "github.com/franciscoluna/envoy/server/docs"
 	"github.com/franciscoluna/envoy/server/internal/api/auth"
 	"github.com/franciscoluna/envoy/server/internal/api/environments"
+	"github.com/franciscoluna/envoy/server/internal/api/projects"
 	"github.com/franciscoluna/envoy/server/internal/shared"
 	httpSwagger "github.com/swaggo/http-swagger"
 
@@ -65,7 +66,7 @@ func openDB(databaseURL string) (*sqlx.DB, error) {
 	return db, nil
 }
 
-func runMigrations(db *sqlx.DB) error {
+func setupDatabase(db *sqlx.DB) error {
 	schema := `
 		CREATE TABLE IF NOT EXISTS users (
 			id TEXT PRIMARY KEY,
@@ -76,9 +77,10 @@ func runMigrations(db *sqlx.DB) error {
 
 		CREATE TABLE IF NOT EXISTS projects (
 			id TEXT PRIMARY KEY,
-			name TEXT NOT NULL,	
+			name TEXT NOT NULL,
 			created_by TEXT NOT NULL,
 			created_at DATETIME NOT NULL,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
 		);
 
@@ -87,9 +89,6 @@ func runMigrations(db *sqlx.DB) error {
 			name TEXT NOT NULL,
 			project_id TEXT NOT NULL,
 			connection_string_encrypted BLOB NOT NULL,
-			ssl_mode TEXT NOT NULL,
-			certificates_json TEXT, 
-			connection_status TEXT NOT NULL DEFAULT 'pending',
 			connection_error TEXT,
 			created_at DATETIME NOT NULL,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,	
@@ -99,6 +98,24 @@ func runMigrations(db *sqlx.DB) error {
 	if _, err := db.Exec(schema); err != nil {
 		return fmt.Errorf("failed to create core tables: %w", err)
 	}
+
+	migration := `
+		ALTER TABLE projects DROP COLUMN description;
+	`
+	if _, err := db.Exec(migration); err != nil {
+		// Ignore error if column already exists
+		fmt.Printf("Migration note (can be ignored): %v\n", err)
+	}
+
+	// Add missing updated_at column if it doesn't exist
+	addUpdatedAtColumn := `
+		ALTER TABLE projects ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP;
+	`
+	if _, err := db.Exec(addUpdatedAtColumn); err != nil {
+		// Ignore error if column already exists
+		fmt.Printf("Migration note (updated_at column): %v\n", err)
+	}
+
 	return nil
 }
 
@@ -117,6 +134,7 @@ func setupRouter(db *sqlx.DB, config *Config) http.Handler {
 
 	authService := auth.RegisterRoutes(r, db, config.JWTSecret)
 	environments.RegisterRoutes(r, authService)
+	projects.RegisterRoutes(r, db, authService)
 
 	return r
 }
@@ -130,8 +148,8 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := runMigrations(db); err != nil {
-		log.Fatal("Failed to run migrations:", err)
+	if err := setupDatabase(db); err != nil {
+		log.Fatal("Failed to setup database:", err)
 	}
 
 	router := setupRouter(db, config)
