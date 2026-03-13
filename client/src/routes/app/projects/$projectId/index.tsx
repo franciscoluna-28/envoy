@@ -1,7 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import client from '@/api/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { 
+  useGetProject, 
+  useGetEnvironments, 
+  EnvironmentList,
+  CreateEnvironmentModal
+} from '@/features/projects'
 
 export const Route = createFileRoute('/app/projects/$projectId/')({
   component: RouteComponent,
@@ -9,86 +13,36 @@ export const Route = createFileRoute('/app/projects/$projectId/')({
 
 function RouteComponent() {
   const { projectId } = Route.useParams()
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
-  const { data: project, isLoading, error } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: async () => {
-      const response = await client.GET('/api/v1/projects/{id}', {
-        params: {
-          path: { id: projectId }
-        }
-      })
-      return response.data
-    }
-  })
+  const { data: project, isLoading: projectsLoading } = useGetProject(projectId)
+  const { data: environments, isLoading: envsLoading } = useGetEnvironments(projectId)
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-xl text-destructive">Error</CardTitle>
-          <CardDescription>
-            Failed to load project
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {error.message || 'An unknown error occurred'}
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!project?.data) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Project Not Found</CardTitle>
-          <CardDescription>
-            The requested project could not be found.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    )
+  if (projectsLoading || envsLoading) {
+    return <div className="p-8 text-center animate-pulse text-muted-foreground">Loading infra...</div>
   }
 
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle className="text-2xl">{project.data.name}</CardTitle>
-        <CardDescription>Project Details</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="flex flex-col gap-8 p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold mb-2">Description</h3>
-          <p className="text-muted-foreground">
-            Description will be available after API types are regenerated
+          <h1 className="text-3xl font-bold tracking-tight">{project?.data?.name}</h1>
+          <p className="text-muted-foreground text-sm">
+            Manage your database environments and schema migrations.
           </p>
         </div>
-        
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Project Information</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Project ID:</span>
-              <span className="text-sm font-mono">{project.data.id}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Project Name:</span>
-              <span className="text-sm">{project.data.name}</span>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        <CreateEnvironmentModal 
+          projectId={projectId}
+          onCreated={() => setCreateDialogOpen(false)} 
+          open={createDialogOpen} 
+          onOpenChange={setCreateDialogOpen} 
+        />
+      </div>
+
+      <EnvironmentList 
+        environments={environments?.data || []} 
+        projectId={projectId} 
+      />
+    </div>
   )
 }
