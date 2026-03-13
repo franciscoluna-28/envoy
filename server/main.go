@@ -6,12 +6,12 @@ import (
 
 	_ "newserver/docs"
 	"newserver/internal/auth"
+	"newserver/internal/database"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-playground/validator/v10"
-	"github.com/jmoiron/sqlx"
 	httpSwagger "github.com/swaggo/http-swagger"
 	_ "modernc.org/sqlite"
 )
@@ -26,7 +26,7 @@ import (
 // @name Authorization
 
 func main() {
-	db, err := sqlx.Connect("sqlite", "envoy.db")
+	db, err := database.New("envoy.db")
 	if err != nil {
 		panic(err)
 	}
