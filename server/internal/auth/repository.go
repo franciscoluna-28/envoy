@@ -11,6 +11,7 @@ import (
 type Repository interface {
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	Create(ctx context.Context, u User) error
+	GetById(ctx context.Context, id string) (*User, error)
 }
 
 type repository struct {
@@ -42,4 +43,19 @@ func (r *repository) Create(ctx context.Context, u User) error {
 
 	_, err := r.db.NamedExecContext(ctx, query, u)
 	return err
+}
+
+func (r *repository) GetById(ctx context.Context, id string) (*User, error) {
+	var user User
+	query := `SELECT id, email, password_hash, created_at FROM users WHERE id = ?`
+
+	err := r.db.GetContext(ctx, &user, query, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &user, nil
 }

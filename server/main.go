@@ -7,6 +7,8 @@ import (
 	_ "newserver/docs"
 	"newserver/internal/auth"
 	"newserver/internal/database"
+	"newserver/internal/projects"
+	"newserver/internal/shared"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -26,17 +28,22 @@ import (
 // @name Authorization
 
 func main() {
-	db, err := database.New("envoy.db")
+	cfg := shared.LoadConfig()
+
+	db, err := database.New(cfg.DatabaseURL)
 	if err != nil {
 		panic(err)
 	}
 
 	v := validator.New()
 	r := chi.NewRouter()
-	authMiddleware := auth.AuthMiddleware(auth.NewJWTProvider("secret"))
-
 	authRepo := auth.NewRepository(db)
-	authHandler := auth.NewHandler(authRepo, v)
+	jwtProvider := auth.NewJWTProvider(cfg.JWTSecret)
+	authHandler := auth.NewHandler(authRepo, v, jwtProvider)
+	authMiddleware := auth.AuthMiddleware(jwtProvider)
+
+	projectRepo := projects.NewRepository(db)
+	projectHandler := projects.NewHandler(projectRepo, v)
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -70,12 +77,19 @@ func main() {
 
 			r.Group(func(r chi.Router) {
 				r.Use(authMiddleware)
+				r.Get("/auth/me", authHandler.GetMe)
+				r.Post("/auth/logout", authHandler.Logout)
+				r.Get("/projects", projectHandler.GetAllProjects)
+				r.Post("/projects", projectHandler.CreateProject)
+				r.Get("/projects/{id}", projectHandler.GetProject)
+				r.Put("/projects/{id}", projectHandler.UpdateProject)
+				r.Delete("/projects/{id}", projectHandler.DeleteProject)
 			})
 		})
 	})
 
-	log.Println("Server starting on :8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	log.Println("Server starting on :" + cfg.Port)
+	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
 }

@@ -38,3 +38,14 @@ func LoginUser(ctx context.Context, repo Repository, email, rawPassword string) 
 	}
 	return user, nil
 }
+
+func GetCurrentUser(ctx context.Context, repo Repository, email string) (*User, error) {
+	user, err := repo.GetByEmail(ctx, email)
+
+	if err != nil {
+		return nil, fmt.Errorf("auth: %w", ErrInvalidCredentials)
+	}
+
+	return user, nil
+
+}

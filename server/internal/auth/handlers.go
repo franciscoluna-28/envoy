@@ -8,15 +8,30 @@ import (
 )
 
 type Handler struct {
-	repo      Repository
-	validator *validator.Validate
+	repo        Repository
+	validator   *validator.Validate
+	jwtProvider *JWTProvider
 }
 
-func NewHandler(repo Repository, v *validator.Validate) *Handler {
+func NewHandler(repo Repository, v *validator.Validate, jwtProvider *JWTProvider) *Handler {
 	return &Handler{
-		repo:      repo,
-		validator: v,
+		repo:        repo,
+		validator:   v,
+		jwtProvider: jwtProvider,
 	}
+}
+
+// setJWTCookie sets the JWT token as an HTTP cookie
+func (h *Handler) setJWTCookie(w http.ResponseWriter, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		Path:     "/",
+		MaxAge:   86400, // 24 hours in seconds
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	})
 }
 
 // Register godoc
@@ -43,6 +58,14 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		response.WriteJSON(w, http.StatusConflict, response.ErrorResponse{Message: err.Error()})
 		return
 	}
+
+	// Generate JWT token and set cookie
+	token, err := h.jwtProvider.GenerateToken(string(user.ID))
+	if err != nil {
+		response.WriteJSON(w, http.StatusInternalServerError, response.ErrorResponse{Message: "Failed to generate token"})
+		return
+	}
+	h.setJWTCookie(w, token)
 
 	response.WriteJSON(w, http.StatusCreated, user)
 }
@@ -72,5 +95,60 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Generate JWT token and set cookie
+	token, err := h.jwtProvider.GenerateToken(string(user.ID))
+	if err != nil {
+		response.WriteJSON(w, http.StatusInternalServerError, response.ErrorResponse{Message: "Failed to generate token"})
+		return
+	}
+	h.setJWTCookie(w, token)
+
 	response.WriteJSON(w, http.StatusOK, user)
+}
+
+// GetMe godoc
+// @Summary Get current user
+// @Description Get the currently authenticated user's profile
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} User
+// @Failure 401 {object} response.ErrorResponse
+// @Router /auth/me [get]
+func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(string)
+
+	user, err := h.repo.GetById(r.Context(), userID)
+
+	if err != nil {
+		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "User not found"})
+		return
+	}
+
+	response.WriteJSON(w, http.StatusOK, user)
+}
+
+// Logout godoc
+// @Summary User logout
+// @Description Logout the current user by clearing the auth cookie
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200
+// @Router /auth/logout [post]
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	// Clear the auth cookie by setting it with MaxAge -1
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	response.WriteJSON(w, http.StatusOK, response.ErrorResponse{Message: "Logged out successfully"})
 }
