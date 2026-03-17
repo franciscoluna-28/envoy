@@ -9,9 +9,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useCreateEnvironment } from '../hooks/useEnvironments'
 
+
 const createEnvironmentSchema = z.object({
   name: z.string().min(1, 'Environment name is required').max(100, 'Environment name must be less than 100 characters'),
-  connection_string: z.string().min(1, 'Connection string is required')
+  connection_string: z.string().min(1, 'Connection string is required'),
+  type: z.enum(['production', 'staging', 'development'])
 })
 
 type CreateEnvironmentForm = z.infer<typeof createEnvironmentSchema>
@@ -28,13 +30,17 @@ export function CreateEnvironmentModal({ projectId, onCreated, open, onOpenChang
     resolver: zodResolver(createEnvironmentSchema),
     defaultValues: {
       name: '',
-      connection_string: ''
+      connection_string: '',
+      type: 'development'
     }
   })
 
   const { mutate, isPending } = useCreateEnvironment()
 
   const onSubmit = (data: CreateEnvironmentForm) => {
+
+    console.log('Submitting form with data:', data)
+
     mutate({ projectId, ...data }, {
       onSuccess: () => {
         form.reset()
@@ -87,6 +93,23 @@ export function CreateEnvironmentModal({ projectId, onCreated, open, onOpenChang
               </FieldDescription>
               <FieldError errors={form.formState.errors.connection_string ? [form.formState.errors.connection_string] : []} />
             </Field>
+
+         <Field>
+  <FieldLabel htmlFor="type">Environment Type</FieldLabel>
+  <div className="flex gap-2 rounded-lg w-full">
+    {['development', 'staging', 'production'].map((option) => (
+      <Button
+        key={option}
+        type="button"
+        onClick={() => form.setValue('type', option as CreateEnvironmentForm['type'])}
+       variant={form.watch("type") === option ? 'secondary' : 'outline'}
+      >
+        {option.charAt(0).toUpperCase() + option.slice(1)}
+      </Button>
+    ))}
+  </div>
+</Field>
+
           </FieldGroup>
             
           <DialogFooter className="gap-2 sm:gap-0">

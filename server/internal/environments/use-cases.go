@@ -65,28 +65,24 @@ func ValidateDatabaseConnectionAsMigrator(ctx context.Context, conn DatabaseConn
 }
 
 func CreateProjectEnvironment(ctx context.Context, input CreateEnvironmentRequest, masterKey []byte, repo Repository) error {
-	fmt.Printf("CreateProjectEnvironment: Starting creation for project %s, environment %s\n", input.ProjectID, input.Name)
-
 	connInfo := DatabaseConnection{
 		ConnectionString: input.ConnectionUrl,
 	}
 
-	fmt.Printf("CreateProjectEnvironment: Validating connection...\n")
 	if err := ValidateDatabaseConnectionAsMigrator(ctx, connInfo); err != nil {
-		fmt.Printf("CreateProjectEnvironment: Validation failed - %v\n", err)
 		return fmt.Errorf("pre-storage validation failed: %w", err)
 	}
 
-	fmt.Printf("CreateProjectEnvironment: Encrypting connection string...\n")
 	encryptedURL, err := EncryptToAes256(input.ConnectionUrl, masterKey)
+
 	if err != nil {
-		fmt.Printf("CreateProjectEnvironment: Encryption failed - %v\n", err)
-		return fmt.Errorf("security breach: could not encrypt string: %w", err)
+		return fmt.Errorf("could not encrypt string: %w", err)
 	}
 
 	now := time.Now()
 	var environment Environment = Environment{
 		ID:                        uuid.New().String(),
+		Type:                      input.Type,
 		Name:                      input.Name,
 		ProjectID:                 input.ProjectID,
 		ConnectionStringEncrypted: string(encryptedURL),
@@ -94,38 +90,31 @@ func CreateProjectEnvironment(ctx context.Context, input CreateEnvironmentReques
 		UpdatedAt:                 now,
 	}
 
-	fmt.Printf("CreateProjectEnvironment: Creating environment in database...\n")
 	err = repo.Create(ctx, environment)
 
 	if err != nil {
-		fmt.Printf("CreateProjectEnvironment: Database creation failed - %v\n", err)
 		return fmt.Errorf("failed to create environment: %w", err)
 	}
 
-	fmt.Printf("CreateProjectEnvironment: Successfully created environment\n")
 	return nil
 }
 
 func GetEnvironmentSchema(ctx context.Context, envID string, repo Repository, masterKey []byte) ([]SchemaColumn, error) {
-	fmt.Printf("GetEnvironmentSchema: Getting schema for environment %s\n", envID)
 
 	env, err := repo.GetByID(ctx, envID)
 	if err != nil {
-		fmt.Printf("GetEnvironmentSchema: Error getting environment - %v\n", err)
 		return nil, err
 	}
 
-	fmt.Printf("GetEnvironmentSchema: Decrypting connection string...\n")
 	decryptedURL, err := DecryptFromAes256(env.ConnectionStringEncrypted, masterKey)
+
 	if err != nil {
-		fmt.Printf("GetEnvironmentSchema: Decryption failed - %v\n", err)
 		return nil, fmt.Errorf("failed to decrypt connection string: %w", err)
 	}
 
-	fmt.Printf("GetEnvironmentSchema: Connecting to database...\n")
 	config, err := pgx.ParseConfig(decryptedURL)
+
 	if err != nil {
-		fmt.Printf("GetEnvironmentSchema: Parse config failed - %v\n", err)
 		return nil, err
 	}
 
@@ -150,26 +139,21 @@ func GetEnvironmentSchema(ctx context.Context, envID string, repo Repository, ma
         ORDER BY 
             table_name, ordinal_position;`
 
-	fmt.Printf("GetEnvironmentSchema: Executing schema query...\n")
 	rows, err := pgConn.Query(ctx, query)
 	if err != nil {
-		fmt.Printf("GetEnvironmentSchema: Schema query failed - %v\n", err)
 		return nil, fmt.Errorf("querying schema failed: %w", err)
 	}
 	defer rows.Close()
 
-	fmt.Printf("GetEnvironmentSchema: Processing schema results...\n")
 	var columns []SchemaColumn
 	for rows.Next() {
 		var col SchemaColumn
 		if err := rows.Scan(&col.TableName, &col.ColumnName, &col.DataType, &col.IsNullable); err != nil {
-			fmt.Printf("GetEnvironmentSchema: Error scanning row - %v\n", err)
 			return nil, err
 		}
 		columns = append(columns, col)
 	}
 
-	fmt.Printf("GetEnvironmentSchema: Successfully retrieved %d columns\n", len(columns))
 	return columns, nil
 }
 

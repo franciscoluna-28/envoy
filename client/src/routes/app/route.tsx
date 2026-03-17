@@ -2,7 +2,7 @@ import { requireAuth } from "@/utils/guard";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useAuthStore } from "@/store/auth";
 import { LogOut, FolderOpen, ChevronDown } from "lucide-react";
-import Logo from "/assets/logo.png";
+import Logo from "@/assets/logo.png";
 import { useLogoutMutation, useMe } from "@/features/auth/hooks";
 import {
   Sidebar,

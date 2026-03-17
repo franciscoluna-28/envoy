@@ -1,7 +1,6 @@
 package environments
 
 import (
-	"fmt"
 	"net/http"
 	response "newserver/internal/shared"
 
@@ -38,26 +37,21 @@ func NewHandler(repo Repository, v *validator.Validate, key []byte) *Handler {
 // @Router /projects/{id}/environments [post]
 func (h *Handler) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
 	projectID := chi.URLParam(r, "id")
-	fmt.Printf("CreateEnvironment: Handler called for project ID: %s\n", projectID)
 
 	var req CreateEnvironmentRequest
 	if err := response.ParseAndValidate(r, h.validator, &req); err != nil {
-		fmt.Printf("CreateEnvironment: Validation error - %v\n", err)
 		response.WriteValidationError(w, err)
 		return
 	}
 
 	req.ProjectID = projectID
-	fmt.Printf("CreateEnvironment: Creating environment with name: %s\n", req.Name)
 
 	err := CreateProjectEnvironment(r.Context(), req, h.key, h.repo)
 	if err != nil {
-		fmt.Printf("CreateEnvironment: Error creating environment - %v\n", err)
 		response.WriteJSON(w, http.StatusInternalServerError, response.ErrorResponse{Message: err.Error()})
 		return
 	}
 
-	fmt.Printf("CreateEnvironment: Successfully created environment\n")
 	response.WriteJSON(w, http.StatusCreated, response.ErrorResponse{Message: "Environment created successfully"})
 }
 
@@ -74,16 +68,13 @@ func (h *Handler) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
 // @Router /projects/{id}/environments [get]
 func (h *Handler) GetAllEnvironmentsByProjectID(w http.ResponseWriter, r *http.Request) {
 	projectID := chi.URLParam(r, "id")
-	fmt.Printf("GetAllEnvironmentsByProjectID: Handler called for project ID: %s\n", projectID)
 
 	envs, err := GetAllEnvironmentsByProjectID(r.Context(), projectID, h.repo)
 	if err != nil {
-		fmt.Printf("GetAllEnvironmentsByProjectID: Error getting environments - %v\n", err)
 		response.WriteJSON(w, http.StatusInternalServerError, response.ErrorResponse{Message: "Failed to get environments"})
 		return
 	}
 
-	fmt.Printf("GetAllEnvironmentsByProjectID: Successfully retrieved %d environments\n", len(envs))
 	response.WriteJSON(w, http.StatusOK, envs)
 }
 
@@ -123,15 +114,12 @@ func (h *Handler) GetEnvironmentByID(w http.ResponseWriter, r *http.Request) {
 // @Router /environments/{id}/schema [get]
 func (h *Handler) GetEnvironmentSchema(w http.ResponseWriter, r *http.Request) {
 	envID := chi.URLParam(r, "id")
-	fmt.Printf("GetEnvironmentSchema: Handler called for environment ID: %s\n", envID)
 
 	schema, err := GetEnvironmentSchema(r.Context(), envID, h.repo, h.key)
 	if err != nil {
-		fmt.Printf("GetEnvironmentSchema: Error getting schema - %v\n", err)
 		response.WriteJSON(w, http.StatusInternalServerError, response.ErrorResponse{Message: "Failed to get environment schema"})
 		return
 	}
 
-	fmt.Printf("GetEnvironmentSchema: Successfully retrieved schema for environment %s\n", envID)
 	response.WriteJSON(w, http.StatusOK, schema)
 }

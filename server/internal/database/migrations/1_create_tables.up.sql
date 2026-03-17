@@ -22,5 +22,6 @@ CREATE TABLE IF NOT EXISTS environments (
     connection_error TEXT,
     created_at DATETIME NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    type TEXT NOT NULL DEFAULT 'development' CHECK (type IN ('production', 'staging', 'development')),
     FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
 );

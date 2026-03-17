@@ -2,14 +2,23 @@ package environments
 
 import "time"
 
+type TypeofEnvironment string
+
+const (
+	Development TypeofEnvironment = "development"
+	Staging     TypeofEnvironment = "staging"
+	Production  TypeofEnvironment = "production"
+)
+
 type Environment struct {
-	ID                        string    `json:"id" db:"id"`
-	Name                      string    `json:"name" db:"name"`
-	ProjectID                 string    `json:"project_id" db:"project_id"`
-	ConnectionStringEncrypted string    `json:"-" db:"connection_string_encrypted"`
-	ConnectionError           string    `json:"connection_error" db:"connection_error"`
-	CreatedAt                 time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt                 time.Time `json:"updated_at" db:"updated_at"`
+	ID                        string            `json:"id" db:"id"`
+	Name                      string            `json:"name" db:"name"`
+	ProjectID                 string            `json:"project_id" db:"project_id"`
+	Type                      TypeofEnvironment `json:"type" db:"type"`
+	ConnectionStringEncrypted string            `json:"-" db:"connection_string_encrypted"`
+	ConnectionError           string            `json:"connection_error" db:"connection_error"`
+	CreatedAt                 time.Time         `json:"created_at" db:"created_at"`
+	UpdatedAt                 time.Time         `json:"updated_at" db:"updated_at"`
 }
 
 type EnvironmentDbUser struct {
@@ -36,9 +45,10 @@ type DatabaseConnection struct {
 }
 
 type CreateEnvironmentRequest struct {
-	Name          string `json:"name" validate:"required"`
-	ProjectID     string `json:"project_id" validate:"required"`
-	ConnectionUrl string `json:"connection_url" validate:"required"`
+	Name          string            `json:"name" validate:"required"`
+	Type          TypeofEnvironment `json:"type" validate:"required,oneof=development staging production"`
+	ProjectID     string            `json:"project_id" validate:"required"`
+	ConnectionUrl string            `json:"connection_url" validate:"required"`
 }
 
 type CertificatesConfig struct {

@@ -21,6 +21,19 @@ export function useGetEnvironments(projectId: string) {
   })
 }
 
+export function useGetEnvironment(projectId: string, envId: string) {
+  return useQuery({
+    queryKey: [...ENVIRONMENTS_QUERY_KEYS.list(projectId), envId],
+    queryFn: async () => {
+      const response = await client.GET('/environments/{id}', {
+        params: { path: { id: envId } }
+      })
+      return response.data
+    },
+    enabled: !!projectId && !!envId
+    } )
+}
+
 export function useCreateEnvironment() {
   const queryClient = useQueryClient()
 
@@ -32,6 +45,7 @@ export function useCreateEnvironment() {
           name: data.name,
           connection_url: data.connection_string,
           project_id: data.projectId,
+          type: data.type
         }
       })
       return response.data
