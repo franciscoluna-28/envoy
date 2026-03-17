@@ -12,8 +12,8 @@ export function useGetEnvironments(projectId: string) {
   return useQuery({
     queryKey: ENVIRONMENTS_QUERY_KEYS.list(projectId),
     queryFn: async () => {
-      const response = await client.GET('/api/v1/projects/{projectId}/environments', {
-        params: { path: { projectId } }
+      const response = await client.GET('/projects/{id}/environments', {
+        params: { path: { id: projectId } }
       })
       return response.data
     },
@@ -26,11 +26,12 @@ export function useCreateEnvironment() {
 
   return useMutation({
     mutationFn: async (data: { projectId: string; name: string; connection_string: string }) => {
-      const response = await client.POST('/api/v1/projects/{projectId}/environments', {
-        params: { path: { projectId: data.projectId } },
+      const response = await client.POST('/projects/{id}/environments', {
+        params: { path: { id: data.projectId } },
         body: {
           name: data.name,
-          connection_url: data.connection_string
+          connection_url: data.connection_string,
+          project_id: data.projectId,
         }
       })
       return response.data

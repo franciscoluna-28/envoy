@@ -117,7 +117,11 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.ErrorResponse
 // @Router /auth/me [get]
 func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
+	userID, ok := GetUserIDFromContext(r.Context())
+	if !ok {
+		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "User not found in context"})
+		return
+	}
 
 	user, err := h.repo.GetById(r.Context(), userID)
 

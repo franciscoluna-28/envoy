@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 export const useRegisterMutation = () => {
   return useMutation({
     mutationFn: async (data: RegisterInputDto) => {
-      const response = await client.POST("/api/v1/auth/register", {
+      const response = await client.POST("/auth/register", {
         body: data,
       });
 
@@ -28,7 +28,7 @@ export const useLoginMutation = () => {
 
   return useMutation({
     mutationFn: async (data: LoginInputDto) => {
-      const response = await client.POST("/api/v1/auth/login", {
+      const response = await client.POST("/auth/login", {
         body: data,
       });
 
@@ -40,8 +40,8 @@ export const useLoginMutation = () => {
     },
 
     onSuccess: (response) => {
-      if (response?.data) {
-        const { id, email, created_at } = response.data;
+      if (response) {
+        const { id, email, created_at } = response;
 
       if(id && email && created_at) { 
         authStore.setAuth({
@@ -61,10 +61,9 @@ export const useLogoutMutation = () => {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await client.POST("/api/v1/auth/logout");
+      const response = await client.POST("/auth/logout");
       if (response.error) {
-        const errorDetail = (response.error as any).detail || "Logout failed";
-        throw new Error(errorDetail);
+        throw new Error("Logout failed");
       }
     },
 
@@ -87,10 +86,10 @@ export const useMe = () => {
   return useQuery({
     queryKey: ["auth", "me"],
     queryFn: async () => {
-      const response = await client.GET("/api/v1/me");
+      const response = await client.GET("/auth/me");
       
       if (response.error) {
-       if (response.response.status === 401) {
+       if (response.response?.status === 401) {
           authStore.logout();
         } 
         const errorDetail = (response.error as any).detail || "Failed to fetch user";

@@ -3,11 +3,11 @@ package projects
 import "time"
 
 type Project struct {
-	ID        string    `json:"id"`
-	CreatedBy string    `json:"created_by"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string    `json:"id" db:"id"`
+	CreatedBy string    `json:"created_by" db:"created_by"`
+	Name      string    `json:"name" db:"name"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type ProjectDTO struct {

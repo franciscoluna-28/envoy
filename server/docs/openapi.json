@@ -7,63 +7,6 @@
         "version": "1.0"
     },
     "paths": {
-        "/api/v1/projects": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new project for the authenticated user",
-                "tags": [
-                    "projects"
-                ],
-                "summary": "Create a new project",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/projects.CreateProjectRequest"
-                            }
-                        }
-                    },
-                    "description": "Project creation request",
-                    "required": true
-                },
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/projects.Project"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/shared.ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/shared.ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/auth/login": {
             "post": {
                 "description": "Authenticate a user with email and password",
@@ -223,6 +166,101 @@
                 }
             }
         },
+        "/environments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a specific environment by ID",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Get environment by ID",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/environments.Environment"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/schema": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get database schema for a specific environment",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Get environment schema",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/projects": {
             "get": {
                 "security": [
@@ -245,6 +283,61 @@
                                     "items": {
                                         "$ref": "#/components/schemas/projects.Project"
                                     }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new project for the authenticated user",
+                "tags": [
+                    "projects"
+                ],
+                "summary": "Create a new project",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/projects.CreateProjectRequest"
+                            }
+                        }
+                    },
+                    "description": "Project creation request",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/projects.Project"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
                                 }
                             }
                         }
@@ -432,6 +525,122 @@
                     }
                 }
             }
+        },
+        "/projects/{id}/environments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all environments for a specific project",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Get all environments for project",
+                "parameters": [
+                    {
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/environments.Environment"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new project environment for the authenticated user",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Create a new project environment",
+                "parameters": [
+                    {
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/environments.CreateEnvironmentRequest"
+                            }
+                        }
+                    },
+                    "description": "Environment creation request",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/environments.Environment"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "servers": [
@@ -490,6 +699,85 @@
                         "type": "string"
                     },
                     "id": {
+                        "type": "string"
+                    }
+                }
+            },
+            "environments.CertificatesConfig": {
+                "type": "object",
+                "properties": {
+                    "ca_cert": {
+                        "type": "string"
+                    },
+                    "client_cert": {
+                        "type": "string"
+                    },
+                    "client_key": {
+                        "type": "string"
+                    }
+                }
+            },
+            "environments.CreateEnvironmentRequest": {
+                "type": "object",
+                "required": [
+                    "connection_url",
+                    "name",
+                    "project_id"
+                ],
+                "properties": {
+                    "certificates": {
+                        "$ref": "#/components/schemas/environments.CertificatesConfig"
+                    },
+                    "connection_url": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "project_id": {
+                        "type": "string"
+                    },
+                    "ssl_mode": {
+                        "type": "string",
+                        "enum": [
+                            "disable",
+                            "allow",
+                            "prefer",
+                            "require",
+                            "verify-ca",
+                            "verify-full"
+                        ]
+                    }
+                }
+            },
+            "environments.Environment": {
+                "type": "object",
+                "properties": {
+                    "certificates_json": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "connection_error": {
+                        "type": "string"
+                    },
+                    "connection_status": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "project_id": {
+                        "type": "string"
+                    },
+                    "updated_at": {
                         "type": "string"
                     }
                 }

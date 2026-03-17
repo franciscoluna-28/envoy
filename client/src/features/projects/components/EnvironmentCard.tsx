@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Database, ExternalLink } from 'lucide-react'
+import { Database, Eye, FileText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { SchemaPreviewDialog } from './SchemaPreviewDialog'
+import { CreateMigrationDialog } from './CreateMigrationDialog'
 
 interface EnvironmentCardProps {
   env: {
@@ -10,10 +12,12 @@ interface EnvironmentCardProps {
     name?: string
     connection_status?: string
   }
-  projectId: string
 }
 
-export function EnvironmentCard({ env, projectId }: EnvironmentCardProps) {
+export function EnvironmentCard({ env }: EnvironmentCardProps) {
+  const [schemaDialogOpen, setSchemaDialogOpen] = useState(false)
+  const [migrationDialogOpen, setMigrationDialogOpen] = useState(false)
+
   return (
     <Card className="hover:border-primary/50 transition-colors">
       <CardHeader className="pb-2">
@@ -36,14 +40,36 @@ export function EnvironmentCard({ env, projectId }: EnvironmentCardProps) {
           <span className="text-muted-foreground">Connected</span>
         </div>
       </CardContent>
-      <div className="border-t pt-4 bg-muted/10 px-6 pb-4">
-        <Button variant="ghost" className="w-full justify-between group">
-          <Link to={`/app/projects/${projectId}/environments/${env.id}`} className="flex items-center justify-between w-full">
-            <span>View Migrations</span>
-            <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </Link>
+      <div className="border-t pt-4 bg-muted/10 px-6 pb-4 space-y-2">
+        <Button 
+          variant="outline" 
+          className="w-full justify-start gap-2"
+          onClick={() => setSchemaDialogOpen(true)}
+        >
+          <Eye className="h-4 w-4" />
+          Preview Schema
+        </Button>
+        <Button 
+          className="w-full justify-start gap-2"
+          onClick={() => setMigrationDialogOpen(true)}
+        >
+          <FileText className="h-4 w-4" />
+          Create Migration
         </Button>
       </div>
+      
+      <SchemaPreviewDialog
+        environmentId={env.id || ""}
+        environmentName={env.name || ""}
+        open={schemaDialogOpen}
+        onOpenChange={setSchemaDialogOpen}
+      />
+
+      <CreateMigrationDialog
+        environmentId={env.id || ""}
+        open={migrationDialogOpen}
+        onOpenChange={setMigrationDialogOpen}
+      />
     </Card>
   )
 }

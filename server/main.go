@@ -7,6 +7,7 @@ import (
 	_ "newserver/docs"
 	"newserver/internal/auth"
 	"newserver/internal/database"
+	"newserver/internal/environments"
 	"newserver/internal/projects"
 	"newserver/internal/shared"
 
@@ -44,6 +45,11 @@ func main() {
 
 	projectRepo := projects.NewRepository(db)
 	projectHandler := projects.NewHandler(projectRepo, v)
+
+	environmentRepo := environments.NewRepository(db)
+	keyBytes := []byte(cfg.EncryptionKey)
+
+	environmentHandler := environments.NewHandler(environmentRepo, v, keyBytes)
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -84,6 +90,10 @@ func main() {
 				r.Get("/projects/{id}", projectHandler.GetProject)
 				r.Put("/projects/{id}", projectHandler.UpdateProject)
 				r.Delete("/projects/{id}", projectHandler.DeleteProject)
+				r.Post("/projects/{id}/environments", environmentHandler.CreateEnvironment)
+				r.Get("/projects/{id}/environments", environmentHandler.GetAllEnvironmentsByProjectID)
+				r.Get("/environments/{id}", environmentHandler.GetEnvironmentByID)
+				r.Get("/environments/{id}/schema", environmentHandler.GetEnvironmentSchema)
 			})
 		})
 	})

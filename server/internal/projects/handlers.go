@@ -1,9 +1,11 @@
 package projects
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
+	"newserver/internal/auth"
 	response "newserver/internal/shared"
 
 	"github.com/go-chi/chi/v5"
@@ -34,7 +36,7 @@ func NewHandler(repo Repository, validator *validator.Validate) *Handler {
 // @Success 201 {object} Project
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Router /api/v1/projects [post]
+// @Router /projects [post]
 func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var req CreateProjectRequest
 	if err := response.ParseAndValidate(r, h.validator, &req); err != nil {
@@ -42,7 +44,11 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(string)
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "User not found in context"})
+		return
+	}
 	now := time.Now()
 
 	project := Project{
@@ -86,7 +92,11 @@ func (h *Handler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(string)
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "User not found in context"})
+		return
+	}
 
 	uProject := Project{
 		CreatedBy: userID,
@@ -119,7 +129,11 @@ func (h *Handler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 // @Router /projects/{id} [get]
 func (h *Handler) GetProject(w http.ResponseWriter, r *http.Request) {
 	projectID := chi.URLParam(r, "id")
-	userID := r.Context().Value("user_id").(string)
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "User not found in context"})
+		return
+	}
 
 	project, err := GetProjectByID(r.Context(), h.repo, projectID, userID)
 	if err != nil {
@@ -145,14 +159,25 @@ func (h *Handler) GetProject(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse
 // @Router /projects [get]
 func (h *Handler) GetAllProjects(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
+	fmt.Printf("GetAllProjects: Handler called\n")
+
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		fmt.Printf("GetAllProjects: User ID not found in context\n")
+		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "User not found in context"})
+		return
+	}
+
+	fmt.Printf("GetAllProjects: User ID extracted: %s\n", userID)
 
 	projects, err := GetAllProjectsByUserID(r.Context(), h.repo, userID)
 	if err != nil {
+		fmt.Printf("GetAllProjects: Error getting projects - %v\n", err)
 		response.WriteJSON(w, http.StatusInternalServerError, response.ErrorResponse{Message: err.Error()})
 		return
 	}
 
+	fmt.Printf("GetAllProjects: Successfully retrieved %d projects\n", len(projects))
 	response.WriteJSON(w, http.StatusOK, projects)
 }
 
@@ -169,7 +194,11 @@ func (h *Handler) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 // @Router /projects/{id} [delete]
 func (h *Handler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	projectID := chi.URLParam(r, "id")
-	userID := r.Context().Value("user_id").(string)
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "User not found in context"})
+		return
+	}
 
 	err := DeleteProject(r.Context(), h.repo, projectID, userID)
 	if err != nil {

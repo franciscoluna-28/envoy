@@ -19,8 +19,8 @@ function RouteComponent() {
   const [updateDialogOpen, setUpdateDialogOpen] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null)
 
-  const currentUpdateProject = projects?.data?.find(p => p.id === updateDialogOpen)
-  const currentDeleteProject = projects?.data?.find(p => p.id === deleteDialogOpen)
+  const currentUpdateProject = projects?.find(p => p.id === updateDialogOpen)
+  const currentDeleteProject = projects?.find(p => p.id === deleteDialogOpen)
 
   if (isLoading) {
     return (
@@ -65,7 +65,7 @@ function RouteComponent() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {projects?.data?.map((project) => (
+        {projects?.map((project) => (
           <ProjectCard 
             key={project.id || 'unknown'} 
             project={project}

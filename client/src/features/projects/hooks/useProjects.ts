@@ -13,7 +13,7 @@ export function useGetAllProjects() {
   return useQuery({
     queryKey: PROJECTS_QUERY_KEYS.lists(),
     queryFn: async () => {
-      const response = await client.GET('/api/v1/projects')
+      const response = await client.GET('/projects')
       return response.data
     }
   })
@@ -23,7 +23,7 @@ export function useGetProject(projectId: string) {
   return useQuery({
     queryKey: PROJECTS_QUERY_KEYS.detail(projectId),
     queryFn: async () => {
-      const response = await client.GET('/api/v1/projects/{id}', {
+      const response = await client.GET('/projects/{id}', {
         params: { path: { id: projectId } }
       })
       return response.data
@@ -37,7 +37,7 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: async (data: { name: string }) => {
-      const response = await client.POST('/api/v1/projects', {
+      const response = await client.POST('/projects', {
         body: data
       })
       return response.data
@@ -53,9 +53,9 @@ export function useUpdateProject() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { name: string } }) => {
-      const response = await client.PUT('/api/v1/projects/{id}', {
+      const response = await client.PUT('/projects/{id}', {
         params: { path: { id } },
-        body: data
+        body: { id, ...data }
       })
       return response.data
     },
@@ -71,7 +71,7 @@ export function useDeleteProject() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await client.DELETE('/api/v1/projects/{id}', {
+      const response = await client.DELETE('/projects/{id}', {
         params: { path: { id } }
       })
       return response.data

@@ -26,7 +26,7 @@ function RouteComponent() {
     <div className="flex flex-col gap-8 p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{project?.data?.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{project?.name ?? 'Project'}</h1>
           <p className="text-muted-foreground text-sm">
             Manage your database environments and schema migrations.
           </p>
@@ -40,8 +40,7 @@ function RouteComponent() {
       </div>
 
       <EnvironmentList 
-        environments={environments?.data || []} 
-        projectId={projectId} 
+        environments={environments || []} 
       />
     </div>
   )

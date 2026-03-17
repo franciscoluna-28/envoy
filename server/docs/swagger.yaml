@@ -31,6 +31,60 @@ definitions:
       id:
         type: string
     type: object
+  environments.CertificatesConfig:
+    properties:
+      ca_cert:
+        type: string
+      client_cert:
+        type: string
+      client_key:
+        type: string
+    type: object
+  environments.CreateEnvironmentRequest:
+    properties:
+      certificates:
+        $ref: '#/definitions/environments.CertificatesConfig'
+      connection_url:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: string
+      ssl_mode:
+        enum:
+        - disable
+        - allow
+        - prefer
+        - require
+        - verify-ca
+        - verify-full
+        type: string
+    required:
+    - connection_url
+    - name
+    - project_id
+    type: object
+  environments.Environment:
+    properties:
+      certificates_json:
+        items:
+          type: string
+        type: array
+      connection_error:
+        type: string
+      connection_status:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   projects.CreateProjectRequest:
     properties:
       name:
@@ -81,38 +135,6 @@ info:
   title: Envoy Auth API
   version: "1.0"
 paths:
-  /api/v1/projects:
-    post:
-      consumes:
-      - application/json
-      description: Create a new project for the authenticated user
-      parameters:
-      - description: Project creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/projects.CreateProjectRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/projects.Project'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/shared.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/shared.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Create a new project
-      tags:
-      - projects
   /auth/login:
     post:
       consumes:
@@ -209,6 +231,61 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /environments/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a specific environment by ID
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/environments.Environment'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get environment by ID
+      tags:
+      - environments
+  /environments/{id}/schema:
+    get:
+      consumes:
+      - application/json
+      description: Get database schema for a specific environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get environment schema
+      tags:
+      - environments
   /projects:
     get:
       consumes:
@@ -230,6 +307,37 @@ paths:
       security:
       - BearerAuth: []
       summary: Get all projects
+      tags:
+      - projects
+    post:
+      consumes:
+      - application/json
+      description: Create a new project for the authenticated user
+      parameters:
+      - description: Project creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/projects.CreateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/projects.Project'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new project
       tags:
       - projects
   /projects/{id}:
@@ -327,6 +435,71 @@ paths:
       summary: Update a project
       tags:
       - projects
+  /projects/{id}/environments:
+    get:
+      consumes:
+      - application/json
+      description: Get all environments for a specific project
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/environments.Environment'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all environments for project
+      tags:
+      - environments
+    post:
+      consumes:
+      - application/json
+      description: Create a new project environment for the authenticated user
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Environment creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environments.CreateEnvironmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/environments.Environment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new project environment
+      tags:
+      - environments
 securityDefinitions:
   BearerAuth:
     in: header
