@@ -207,6 +207,266 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing environment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Update environment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Environment update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/environments.UpdateEnvironmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/environments.Environment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete an environment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Delete environment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/migrations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all migrations for a specific environment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Get environment migrations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/environments.EnvironmentMigration"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Execute a database migration in an environment with full tracking",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Run database migration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Migration execution request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/environments.CreateEnvironmentMigrationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/migrations/preview": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Preview database schema changes by running migration in a transaction",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Preview environment schema changes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Migration preview request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/environments.PreviewMigrationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/environments.SchemaColumn"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/environments/{id}/schema": {
@@ -242,6 +502,92 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/validate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validate database connection for an environment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Validate environment connection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/migrations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a specific migration by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Get environment migration by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Migration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/environments.EnvironmentMigration"
                         }
                     },
                     "500": {
@@ -638,16 +984,29 @@ const docTemplate = `{
                 }
             }
         },
-        "environments.CertificatesConfig": {
+        "environments.CreateEnvironmentMigrationRequest": {
             "type": "object",
+            "required": [
+                "client_id",
+                "description",
+                "environment_id",
+                "name",
+                "sql_content"
+            ],
             "properties": {
-                "ca_cert": {
+                "client_id": {
                     "type": "string"
                 },
-                "client_cert": {
+                "description": {
                     "type": "string"
                 },
-                "client_key": {
+                "environment_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sql_content": {
                     "type": "string"
                 }
             }
@@ -657,12 +1016,10 @@ const docTemplate = `{
             "required": [
                 "connection_url",
                 "name",
-                "project_id"
+                "project_id",
+                "type"
             ],
             "properties": {
-                "certificates": {
-                    "$ref": "#/definitions/environments.CertificatesConfig"
-                },
                 "connection_url": {
                     "type": "string"
                 },
@@ -672,15 +1029,16 @@ const docTemplate = `{
                 "project_id": {
                     "type": "string"
                 },
-                "ssl_mode": {
-                    "type": "string",
+                "type": {
                     "enum": [
-                        "disable",
-                        "allow",
-                        "prefer",
-                        "require",
-                        "verify-ca",
-                        "verify-full"
+                        "development",
+                        "staging",
+                        "production"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/environments.TypeofEnvironment"
+                        }
                     ]
                 }
             }
@@ -688,16 +1046,7 @@ const docTemplate = `{
         "environments.Environment": {
             "type": "object",
             "properties": {
-                "certificates_json": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "connection_error": {
-                    "type": "string"
-                },
-                "connection_status": {
                     "type": "string"
                 },
                 "created_at": {
@@ -712,8 +1061,122 @@ const docTemplate = `{
                 "project_id": {
                     "type": "string"
                 },
+                "type": {
+                    "$ref": "#/definitions/environments.TypeofEnvironment"
+                },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "environments.EnvironmentMigration": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "description": "Duration in milliseconds to match INTEGER type",
+                    "type": "integer"
+                },
+                "environment_id": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "executed_at": {
+                    "type": "string"
+                },
+                "executed_by": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sql_content": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "environments.PreviewMigrationRequest": {
+            "type": "object",
+            "required": [
+                "sql_content"
+            ],
+            "properties": {
+                "sql_content": {
+                    "type": "string"
+                }
+            }
+        },
+        "environments.SchemaColumn": {
+            "type": "object",
+            "properties": {
+                "column_name": {
+                    "type": "string"
+                },
+                "data_type": {
+                    "type": "string"
+                },
+                "is_nullable": {
+                    "type": "string"
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "environments.TypeofEnvironment": {
+            "type": "string",
+            "enum": [
+                "development",
+                "staging",
+                "production"
+            ],
+            "x-enum-varnames": [
+                "Development",
+                "Staging",
+                "Production"
+            ]
+        },
+        "environments.UpdateEnvironmentRequest": {
+            "type": "object",
+            "required": [
+                "connection_url",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "connection_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "development",
+                        "staging",
+                        "production"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/environments.TypeofEnvironment"
+                        }
+                    ]
                 }
             }
         },

@@ -211,6 +211,304 @@
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing environment",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Update environment",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/environments.UpdateEnvironmentRequest"
+                            }
+                        }
+                    },
+                    "description": "Environment update request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/environments.Environment"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete an environment",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Delete environment",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/migrations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all migrations for a specific environment",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Get environment migrations",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/environments.EnvironmentMigration"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Execute a database migration in an environment with full tracking",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Run database migration",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/environments.CreateEnvironmentMigrationRequest"
+                            }
+                        }
+                    },
+                    "description": "Migration execution request",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/migrations/preview": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Preview database schema changes by running migration in a transaction",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Preview environment schema changes",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/environments.PreviewMigrationRequest"
+                            }
+                        }
+                    },
+                    "description": "Migration preview request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/environments.SchemaColumn"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/environments/{id}/schema": {
@@ -244,6 +542,100 @@
                                 "schema": {
                                     "type": "object",
                                     "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/validate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validate database connection for an environment",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Validate environment connection",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/migrations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a specific migration by ID",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Get environment migration by ID",
+                "parameters": [
+                    {
+                        "description": "Migration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/environments.EnvironmentMigration"
                                 }
                             }
                         }
@@ -703,16 +1095,29 @@
                     }
                 }
             },
-            "environments.CertificatesConfig": {
+            "environments.CreateEnvironmentMigrationRequest": {
                 "type": "object",
+                "required": [
+                    "client_id",
+                    "description",
+                    "environment_id",
+                    "name",
+                    "sql_content"
+                ],
                 "properties": {
-                    "ca_cert": {
+                    "client_id": {
                         "type": "string"
                     },
-                    "client_cert": {
+                    "description": {
                         "type": "string"
                     },
-                    "client_key": {
+                    "environment_id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "sql_content": {
                         "type": "string"
                     }
                 }
@@ -722,12 +1127,10 @@
                 "required": [
                     "connection_url",
                     "name",
-                    "project_id"
+                    "project_id",
+                    "type"
                 ],
                 "properties": {
-                    "certificates": {
-                        "$ref": "#/components/schemas/environments.CertificatesConfig"
-                    },
                     "connection_url": {
                         "type": "string"
                     },
@@ -737,15 +1140,16 @@
                     "project_id": {
                         "type": "string"
                     },
-                    "ssl_mode": {
-                        "type": "string",
+                    "type": {
                         "enum": [
-                            "disable",
-                            "allow",
-                            "prefer",
-                            "require",
-                            "verify-ca",
-                            "verify-full"
+                            "development",
+                            "staging",
+                            "production"
+                        ],
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/environments.TypeofEnvironment"
+                            }
                         ]
                     }
                 }
@@ -753,16 +1157,7 @@
             "environments.Environment": {
                 "type": "object",
                 "properties": {
-                    "certificates_json": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
                     "connection_error": {
-                        "type": "string"
-                    },
-                    "connection_status": {
                         "type": "string"
                     },
                     "created_at": {
@@ -777,8 +1172,122 @@
                     "project_id": {
                         "type": "string"
                     },
+                    "type": {
+                        "$ref": "#/components/schemas/environments.TypeofEnvironment"
+                    },
                     "updated_at": {
                         "type": "string"
+                    }
+                }
+            },
+            "environments.EnvironmentMigration": {
+                "type": "object",
+                "properties": {
+                    "client_id": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "duration": {
+                        "description": "Duration in milliseconds to match INTEGER type",
+                        "type": "integer"
+                    },
+                    "environment_id": {
+                        "type": "string"
+                    },
+                    "error_message": {
+                        "type": "string"
+                    },
+                    "executed_at": {
+                        "type": "string"
+                    },
+                    "executed_by": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "sql_content": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "environments.PreviewMigrationRequest": {
+                "type": "object",
+                "required": [
+                    "sql_content"
+                ],
+                "properties": {
+                    "sql_content": {
+                        "type": "string"
+                    }
+                }
+            },
+            "environments.SchemaColumn": {
+                "type": "object",
+                "properties": {
+                    "column_name": {
+                        "type": "string"
+                    },
+                    "data_type": {
+                        "type": "string"
+                    },
+                    "is_nullable": {
+                        "type": "string"
+                    },
+                    "table_name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "environments.TypeofEnvironment": {
+                "type": "string",
+                "enum": [
+                    "development",
+                    "staging",
+                    "production"
+                ],
+                "x-enum-varnames": [
+                    "Development",
+                    "Staging",
+                    "Production"
+                ]
+            },
+            "environments.UpdateEnvironmentRequest": {
+                "type": "object",
+                "required": [
+                    "connection_url",
+                    "name",
+                    "type"
+                ],
+                "properties": {
+                    "connection_url": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "enum": [
+                            "development",
+                            "staging",
+                            "production"
+                        ],
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/environments.TypeofEnvironment"
+                            }
+                        ]
                     }
                 }
             },

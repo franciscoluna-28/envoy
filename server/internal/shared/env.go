@@ -13,6 +13,7 @@ type Config struct {
 	JWTSecret     string `env:"JWT_SECRET,required"`
 	Env           string `env:"APP_ENV" envDefault:"development"`
 	EncryptionKey string `env:"ENCRYPTION_KEY,required"`
+	ChecksumKey   string `env:"CHECKSUM_KEY,required"`
 }
 
 func LoadConfig() *Config {

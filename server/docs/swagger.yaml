@@ -31,48 +31,49 @@ definitions:
       id:
         type: string
     type: object
-  environments.CertificatesConfig:
+  environments.CreateEnvironmentMigrationRequest:
     properties:
-      ca_cert:
+      client_id:
         type: string
-      client_cert:
+      description:
         type: string
-      client_key:
+      environment_id:
         type: string
+      name:
+        type: string
+      sql_content:
+        type: string
+    required:
+    - client_id
+    - description
+    - environment_id
+    - name
+    - sql_content
     type: object
   environments.CreateEnvironmentRequest:
     properties:
-      certificates:
-        $ref: '#/definitions/environments.CertificatesConfig'
       connection_url:
         type: string
       name:
         type: string
       project_id:
         type: string
-      ssl_mode:
+      type:
+        allOf:
+        - $ref: '#/definitions/environments.TypeofEnvironment'
         enum:
-        - disable
-        - allow
-        - prefer
-        - require
-        - verify-ca
-        - verify-full
-        type: string
+        - development
+        - staging
+        - production
     required:
     - connection_url
     - name
     - project_id
+    - type
     type: object
   environments.Environment:
     properties:
-      certificates_json:
-        items:
-          type: string
-        type: array
       connection_error:
-        type: string
-      connection_status:
         type: string
       created_at:
         type: string
@@ -82,8 +83,84 @@ definitions:
         type: string
       project_id:
         type: string
+      type:
+        $ref: '#/definitions/environments.TypeofEnvironment'
       updated_at:
         type: string
+    type: object
+  environments.EnvironmentMigration:
+    properties:
+      client_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      duration:
+        description: Duration in milliseconds to match INTEGER type
+        type: integer
+      environment_id:
+        type: string
+      error_message:
+        type: string
+      executed_at:
+        type: string
+      executed_by:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      sql_content:
+        type: string
+      status:
+        type: string
+    type: object
+  environments.PreviewMigrationRequest:
+    properties:
+      sql_content:
+        type: string
+    required:
+    - sql_content
+    type: object
+  environments.SchemaColumn:
+    properties:
+      column_name:
+        type: string
+      data_type:
+        type: string
+      is_nullable:
+        type: string
+      table_name:
+        type: string
+    type: object
+  environments.TypeofEnvironment:
+    enum:
+    - development
+    - staging
+    - production
+    type: string
+    x-enum-varnames:
+    - Development
+    - Staging
+    - Production
+  environments.UpdateEnvironmentRequest:
+    properties:
+      connection_url:
+        type: string
+      name:
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/environments.TypeofEnvironment'
+        enum:
+        - development
+        - staging
+        - production
+    required:
+    - connection_url
+    - name
+    - type
     type: object
   projects.CreateProjectRequest:
     properties:
@@ -232,6 +309,32 @@ paths:
       tags:
       - auth
   /environments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete environment
+      tags:
+      - environments
     get:
       consumes:
       - application/json
@@ -256,6 +359,146 @@ paths:
       security:
       - BearerAuth: []
       summary: Get environment by ID
+      tags:
+      - environments
+    put:
+      consumes:
+      - application/json
+      description: Update an existing environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Environment update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environments.UpdateEnvironmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/environments.Environment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update environment
+      tags:
+      - environments
+  /environments/{id}/migrations:
+    get:
+      consumes:
+      - application/json
+      description: Get all migrations for a specific environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/environments.EnvironmentMigration'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get environment migrations
+      tags:
+      - environments
+    post:
+      consumes:
+      - application/json
+      description: Execute a database migration in an environment with full tracking
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Migration execution request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environments.CreateEnvironmentMigrationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Run database migration
+      tags:
+      - environments
+  /environments/{id}/migrations/preview:
+    post:
+      consumes:
+      - application/json
+      description: Preview database schema changes by running migration in a transaction
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Migration preview request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environments.PreviewMigrationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/environments.SchemaColumn'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Preview environment schema changes
       tags:
       - environments
   /environments/{id}/schema:
@@ -284,6 +527,60 @@ paths:
       security:
       - BearerAuth: []
       summary: Get environment schema
+      tags:
+      - environments
+  /environments/{id}/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate database connection for an environment
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Validate environment connection
+      tags:
+      - environments
+  /migrations/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a specific migration by ID
+      parameters:
+      - description: Migration ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/environments.EnvironmentMigration'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get environment migration by ID
       tags:
       - environments
   /projects:

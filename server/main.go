@@ -47,9 +47,10 @@ func main() {
 	projectHandler := projects.NewHandler(projectRepo, v)
 
 	environmentRepo := environments.NewRepository(db)
-	keyBytes := []byte(cfg.EncryptionKey)
+	masterKey := []byte(cfg.EncryptionKey)
+	checksumKey := []byte(cfg.ChecksumKey)
 
-	environmentHandler := environments.NewHandler(environmentRepo, v, keyBytes)
+	environmentHandler := environments.NewHandler(environmentRepo, v, masterKey, checksumKey)
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -93,7 +94,15 @@ func main() {
 				r.Post("/projects/{id}/environments", environmentHandler.CreateEnvironment)
 				r.Get("/projects/{id}/environments", environmentHandler.GetAllEnvironmentsByProjectID)
 				r.Get("/environments/{id}", environmentHandler.GetEnvironmentByID)
+				r.Put("/environments/{id}", environmentHandler.UpdateEnvironment)
+				r.Delete("/environments/{id}", environmentHandler.DeleteEnvironment)
 				r.Get("/environments/{id}/schema", environmentHandler.GetEnvironmentSchema)
+				r.Post("/environments/{id}/migrations/preview", environmentHandler.PreviewEnvironmentSchemaChanges)
+				r.Post("/environments/{id}/migrations", environmentHandler.RunDatabaseMigration)
+				r.Get("/environments/{id}/migrations", environmentHandler.GetEnvironmentMigrations)
+				r.Get("/migrations/{id}", environmentHandler.GetEnvironmentMigrationByID)
+				r.Post("/environments/{id}/validate", environmentHandler.ValidateEnvironmentConnection)
+				r.Post("/environments/{id}/verify-permissions", environmentHandler.VerifyDatabasePermissions)
 			})
 		})
 	})

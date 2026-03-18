@@ -3,8 +3,11 @@ package environments
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 )
@@ -58,4 +61,10 @@ func DecryptFromAes256(ciphertextB64 string, masterKey []byte) (string, error) {
 	}
 
 	return string(plaintext), nil
+}
+
+func GenerateSQLChecksum(sqlContent string, checksumKey []byte) string {
+	h := hmac.New(sha256.New, checksumKey)
+	h.Write([]byte(sqlContent))
+	return hex.EncodeToString(h.Sum(nil))
 }
