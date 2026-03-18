@@ -44,7 +44,7 @@ export function CreateProjectModal({ onCreated, open, onOpenChange }: CreateProj
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="font-semibold">
+        <Button>
           <Plus className="w-4 h-4 mr-2" />
           New Project
         </Button>

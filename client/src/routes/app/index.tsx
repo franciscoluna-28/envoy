@@ -8,6 +8,7 @@ import {
   DeleteProjectModal,
   useGetAllProjects
 } from '@/features/projects'
+import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/app/')({
   component: RouteComponent
@@ -24,32 +25,47 @@ function RouteComponent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner/>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <Spinner className="w-8 h-8 text-blue-600" />
+        <p className="text-xs text-stone-400 animate-pulse">Polling infrastructure data...</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto w-full px-4 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 border-b pb-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Projects</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Scale and manage your deployment infrastructure.
-          </p>
+    <div className="flex flex-col h-full">
+      <header className="flex items-center justify-between py-6 border-b">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold tracking-tighter text-stone-900 uppercase">
+              Infrastructure / Projects
+            </h2>
+          </div>
+         <div className="flex items-center gap-3">
+             <div className="flex items-center gap-1.5 text-[10px] font-bold text-green-600 uppercase tracking-tight">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                System Operational
+             </div>
+             <span className="text-stone-300 text-[10px]">•</span>
+            <Badge variant="outline" className="text-[10px] border-stone-200 text-stone-500 h-5 px-1.5 font-medium uppercase">
+              {projects?.length || 0} Project{projects?.length !== 1 ? 's' : ''} 
+            </Badge>
+          </div>
         </div>
-        <CreateProjectModal onCreated={() => setCreateDialogOpen(false)} open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
-      </div>
+
+        <CreateProjectModal 
+          onCreated={() => setCreateDialogOpen(false)} 
+          open={createDialogOpen} 
+          onOpenChange={setCreateDialogOpen} 
+        />
+      </header>
 
       {currentUpdateProject && (
         <UpdateProjectModal 
           project={currentUpdateProject}
           open={updateDialogOpen !== null}
           onUpdated={() => setUpdateDialogOpen(null)}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setUpdateDialogOpen(null)
-          }}
+          onOpenChange={(isOpen) => !isOpen && setUpdateDialogOpen(null)}
         />
       )}
 
@@ -58,22 +74,20 @@ function RouteComponent() {
           project={currentDeleteProject}
           open={deleteDialogOpen !== null}
           onDeleted={() => setDeleteDialogOpen(null)}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setDeleteDialogOpen(null)
-          }}
+          onOpenChange={(isOpen) => !isOpen && setDeleteDialogOpen(null)}
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {projects?.map((project) => (
-          <ProjectCard 
-            key={project.id || 'unknown'} 
-            project={project}
-            onUpdate={() => setUpdateDialogOpen(project.id || null)}
-            onDelete={() => setDeleteDialogOpen(project.id || null)}
-          />
-        ))}
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 py-6">
+          {projects?.map((project) => (
+            <ProjectCard 
+              key={project.id || 'unknown'} 
+              project={project}
+              onUpdate={() => setUpdateDialogOpen(project.id || null)}
+              onDelete={() => setDeleteDialogOpen(project.id || null)}
+            />
+          ))}
+        </div>
     </div>
   )
 }

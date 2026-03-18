@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
+import { ProjectBreadcrumb } from "@/features/projects/components/ProjectBreadcrumb";
 
 export const Route = createFileRoute("/app")({
   component: RouteComponent,
@@ -127,10 +128,15 @@ function RouteComponent() {
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-
       <SidebarInset>
-        <div className="flex flex-1 flex-col gap-4 p-4 mt-8">
-          <Outlet />
+        <div className="flex flex-1 flex-col gap-8 mt-8 mx-auto p-6 w-full max-w-[1200px]">
+          <div className="flex flex-col gap-2">
+            <ProjectBreadcrumb />
+          </div>
+
+          <main className="flex-1">
+            <Outlet />
+          </main>
         </div>
       </SidebarInset>
     </SidebarProvider>

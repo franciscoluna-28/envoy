@@ -1,10 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Database } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { useState } from 'react'
-import { SchemaPreviewDialog } from './SchemaPreviewDialog'
-import { CreateMigrationDialog } from './CreateMigrationDialog'
 import { Link } from '@tanstack/react-router'
 
 interface EnvironmentCardProps {
@@ -18,66 +15,51 @@ interface EnvironmentCardProps {
 }
 
 export function EnvironmentCard({ env }: EnvironmentCardProps) {
-  const [schemaDialogOpen, setSchemaDialogOpen] = useState(false)
-  const [migrationDialogOpen, setMigrationDialogOpen] = useState(false)
-
   return (
-    <Card className="hover:border-primary/50 transition-colors min-w-[300px]">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-bold flex items-center gap-2">
-            <Database className="h-4 w-4 text-muted-foreground" />
-            {env.name}
-          </CardTitle>
-          <Badge className='capitalize' variant="secondary">
-            {env.type || 'development'}
-          </Badge>
+    <Card className="group relative min-w-[350px] shadow-sm hover:shadow-md transition-all duration-300 border-stone-200 p-0 overflow-hidden">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-8">
+          <div className="space-y-1.5">
+            <h3 className="text-lg font-semibold tracking-tight text-stone-900 flex items-center gap-2">
+              <Database className="w-4 h-4 text-stone-400 transition-colors" />
+              {env.name || "Unnamed Environment"}
+            </h3>
+            
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant="secondary" 
+                className="bg-stone-100 text-[10px] px-1.5 py-0 h-4 font-bold border-none text-stone-500 uppercase tracking-wider"
+              >
+                {env.type || 'development'}
+              </Badge>
+              
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-green-600">
+                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                Connected
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="font-mono text-xs truncate text-muted-foreground">
-          Database Environment
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-2 text-sm">
-          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-black font-medium text-xs">Connected</span>
+
+        <div className="flex items-center justify-between gap-3">
+          <Link 
+            className="w-full"
+            to="/app/projects/$projectId/environments/$envId"
+            params={{
+              projectId: env.project_id || '',
+              envId: env.id || ''
+            }}
+          >
+            <Button 
+              variant="secondary" 
+              size="lg"
+              className="w-full"
+            >
+              Configure Environment
+            </Button>
+          </Link>
         </div>
       </CardContent>
-      <div className="border-t pt-4 bg-muted/10 px-6 pb-4 space-y-2">
-      <Link to={`/app/projects/${env.project_id}/environments/${env.id}`}>
-      <Button variant="secondary" className="w-full gap-2">
-        View Details
-      </Button>
-      </Link>
-      {/*   <Button 
-          variant="outline" 
-          className="w-full justify-start gap-2"
-          onClick={() => setSchemaDialogOpen(true)}
-        >
-          <Eye className="h-4 w-4" />
-          Preview Schema
-        </Button>
-        <Button 
-          className="w-full justify-start gap-2"
-          onClick={() => setMigrationDialogOpen(true)}
-        >
-          <FileText className="h-4 w-4" />
-          Create Migration
-        </Button> */}
-      </div>
-      
-      <SchemaPreviewDialog
-        environmentId={env.id || ""}
-        environmentName={env.name || ""}
-        open={schemaDialogOpen}
-        onOpenChange={setSchemaDialogOpen}
-      />
-
-      <CreateMigrationDialog
-        environmentId={env.id || ""}
-        open={migrationDialogOpen}
-        onOpenChange={setMigrationDialogOpen}
-      />
     </Card>
   )
 }

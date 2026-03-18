@@ -133,7 +133,6 @@ export function ReactFlowGridSchema({ schema, isLoading }: ReactFlowGridSchemaPr
       },
     })
 
-    // Grid positioning
     col += 1
     if (col >= maxCols) {
       col = 0

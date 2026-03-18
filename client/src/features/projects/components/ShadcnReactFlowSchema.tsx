@@ -1,93 +1,21 @@
-import { memo } from 'react'
-import {
-  ReactFlow,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  type Node,
-  type Edge,
-} from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Database } from 'lucide-react'
-
-interface TableNodeProps {
-  data: {
-    tableName: string
-    columns: Array<{
-      column_name: string
-      data_type: string
-      is_nullable: string
-    }>
-  }
-}
-
-const TableNode = memo<TableNodeProps>(({ data }) => {
-  return (
-    <Card className="min-w-[300px] border-2 shadow-lg overflow-hidden border-slate-200/50">
-      <CardHeader className="bg-slate-50/50 pb-3 border-b">
-        <CardTitle className="text-sm font-bold flex items-center justify-between">
-          <div className="flex items-center gap-2 text-slate-900">
-            <Database className="h-4 w-4 text-blue-500" />
-            {data.tableName}
-          </div>
-
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="divide-y divide-slate-100">
-          {data.columns.map((column: any, index: number) => {
-            const isPK = column.column_name === 'id'; 
-            
-            return (
-              <div key={index} className="group flex justify-between items-center px-4 py-2 hover:bg-blue-50/30 transition-colors">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  {isPK ? (
-                    <span className="text-[10px] font-bold text-black">PK</span>
-                  ) : (
-                    <div className="w-1 h-1 rounded-full bg-slate-300 group-hover:bg-blue-400" />
-                  )}
-                  <span className={`font-mono text-xs truncate ${isPK ? 'font-bold text-slate-900' : 'text-slate-700'}`}>
-                    {column.column_name}
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
-                    {column.data_type.replace('without time zone', '')}
-                  </span>
-                  {column.is_nullable === 'NO' && (
-                    <span className="text-red-500 text-[10px] font-bold" title="Required">*</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
-  )
-})
-
-TableNode.displayName = 'TableNode'
-
-const nodeTypes = {
-  table: TableNode,
-}
+import { useMemo } from 'react'
+import { Database, Hash, Lock, Table as TableIcon } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 interface ShadcnReactFlowSchemaProps {
-  schema: any
+  schema: any[]
   isLoading?: boolean
 }
 
 export function ShadcnReactFlowSchema({ schema, isLoading }: ShadcnReactFlowSchemaProps) {
   if (isLoading) {
     return (
-      <div className="h-[600px] flex items-center justify-center">
+      <div className="h-[400px] flex items-center justify-center border rounded-lg bg-stone-50/20">
         <div className="text-center">
-          <Database className="h-12 w-12 text-muted-foreground animate-pulse mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading database schema...</p>
+          <Database className="h-8 w-8 text-stone-300 animate-pulse mx-auto mb-3" />
+          <p className="text-xs text-stone-500 font-mono">Loading schema...</p>
         </div>
       </div>
     )
@@ -95,80 +23,83 @@ export function ShadcnReactFlowSchema({ schema, isLoading }: ShadcnReactFlowSche
 
   if (!schema || schema.length === 0) {
     return (
-      <div className="h-[600px] flex items-center justify-center">
+      <div className="h-[200px] flex items-center justify-center border border-dashed rounded-lg bg-stone-50/10">
         <div className="text-center">
-          <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No schema data available</p>
+          <Database className="h-6 w-6 text-stone-300 mx-auto mb-2" />
+          <p className="text-xs text-stone-400 font-mono">No schema detected in this environment</p>
         </div>
       </div>
     )
   }
 
-  // Group schema data by table
-  const groupedByTable: Record<string, any[]> = (schema || []).reduce((acc: Record<string, any[]>, item: any) => {
-    const tableName = item.table_name || 'unknown'
-    if (!acc[tableName]) {
-      acc[tableName] = []
-    }
-    acc[tableName].push(item)
-    return acc
-  }, {})
-
-  // Create nodes in a grid layout
-  const initialNodes: Node[] = []
-  const initialEdges: Edge[] = []
-
-  let yOffset = 50
-  let xOffset = 50
-  let col = 0
-  const maxCols = 4
-  const cardWidth = 340
-  const gap = 40
-
-Object.entries(groupedByTable).forEach(([tableName, columns]) => {
-  const nodeId = `table-${tableName}`;
-  
-  const estimatedHeight = 60 + (columns.length * 32);
-
-  initialNodes.push({
-    id: nodeId,
-    type: 'table',
-    position: { x: xOffset, y: yOffset },
-    data: { tableName, columns },
-  });
-
-  col += 1;
-  if (col >= maxCols) {
-    col = 0;
-    xOffset = 50;
-    yOffset += estimatedHeight + 80; 
-  } else {
-    xOffset += cardWidth + gap;
-  }
-});
-
-  const [nodes, , onNodesChange] = useNodesState(initialNodes)
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges)
+  const groupedByTable = useMemo(() => {
+    return schema.reduce((acc: Record<string, any[]>, item: any) => {
+      const tableName = item.table_name || 'unknown'
+      if (!acc[tableName]) acc[tableName] = []
+      acc[tableName].push(item)
+      return acc
+    }, {})
+  }, [schema])
 
   return (
-    <div className="h-[600px] w-full border rounded-lg">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        nodeTypes={nodeTypes}
-        fitView
-        attributionPosition="bottom-left"
-        defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
-      >
-        <Background />
-        <Controls 
-          showZoom={true}
-          showFitView={true}
-          showInteractive={false}
-        />
-      </ReactFlow>
-    </div>
-  )
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 bg-stone-50/50">
+    {Object.entries(groupedByTable).map(([tableName, columns]) => (
+      <Card key={tableName} className="shadow-sm overflow-hidden p-0 border-stone-200 bg-white group/card hover:shadow-md transition-all duration-300">
+        <CardHeader className="border-b bg-stone-50/50 px-4 py-3 group-hover/card:bg-stone-100/50 transition-colors">
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-blue-50 rounded-md border border-blue-100">
+                <TableIcon className="h-3.5 w-3.5 text-blue-600" />
+              </div>
+              <span className="font-bold text-sm text-stone-900 tracking-tight">
+                {tableName}
+              </span>
+            </div>
+            <Badge variant="secondary" className="text-[10px]">
+              {columns.length} Columns
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="p-0">
+          <Table>
+            <TableBody>
+              {columns.map((col, index) => {
+                const isPK = col.column_name === 'id' || col.column_name.endsWith('_id') 
+                
+                return (
+                  <TableRow key={index} className="hover:bg-blue-50/30 border-stone-100 last:border-0 group/row transition-colors">
+                    <TableCell className="py-2.5 px-4 flex items-center gap-3">
+                      {isPK ? (
+                        <Hash className="h-3.5 w-3.5 text-amber-500 shrink-0 stroke-[2.5px]" />
+                      ) : (
+                        <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-stone-200 group-hover/row:bg-blue-400 transition-colors" />
+                        </div>
+                      )}
+                      <span className={`text-[12px] font-medium tracking-tight ${isPK ? "text-stone-900 font-bold" : "text-stone-800"}`}>
+                        {col.column_name}
+                      </span>
+                    </TableCell>
+                    
+                    <TableCell className="py-2.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <code className="text-[10px] font-bold text-blue-700 bg-blue-50/50 px-1.5 py-0.5 rounded border border-blue-100/50 uppercase tracking-tighter">
+                          {col.data_type.replace('without time zone', '').trim()}
+                        </code>
+                        {col.is_nullable === 'NO' && (
+                          <Lock className="h-3 w-3 text-stone-400 stroke-[2.5px]"  />
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+)
 }

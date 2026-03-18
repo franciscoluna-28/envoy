@@ -54,7 +54,9 @@ export function CompactGridSchema({ schema, isLoading }: CompactGridSchemaProps)
                 <Database className="h-3 w-3 text-gray-500" />
                 {tableName}
               </h3>
-            
+              <p className="text-xs text-gray-500 mt-0.5">
+                {(columns as any[]).length} cols
+              </p>
             </div>
             
             <div className="p-2 space-y-1 max-h-48 overflow-y-auto">

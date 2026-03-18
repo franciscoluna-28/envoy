@@ -15,7 +15,6 @@ export { ReactFlowGridSchema } from './components/ReactFlowGridSchema'
 export { MinimalSchema } from './components/MinimalSchema'
 export { CompactGridSchema } from './components/CompactGridSchema'
 export { ShadcnReactFlowSchema } from './components/ShadcnReactFlowSchema'
-export { SchemaPreviewDialog } from './components/SchemaPreviewDialog'
 export { CreateMigrationDialog } from './components/CreateMigrationDialog'
 
 // Hooks
