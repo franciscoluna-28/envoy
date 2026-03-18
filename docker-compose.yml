@@ -1,0 +1,49 @@
+services:
+  # PostgreSQL database for development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: envoy-postgres-dev
+    environment:
+      POSTGRES_DB: envoy_dev
+      POSTGRES_USER: envoy_superuser
+      POSTGRES_PASSWORD: superuser_password_123
+      POSTGRES_MULTIPLE_DATABASES: envoy_dev,envoy_dev_readonly
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+    networks:
+      - envoy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U envoy_superuser -d envoy_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Admin tool (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: envoy-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@envoy.dev
+      PGADMIN_DEFAULT_PASSWORD: admin_password_789
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - envoy-network
+    depends_on:
+      - postgres-dev
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  envoy-network:
+    driver: bridge

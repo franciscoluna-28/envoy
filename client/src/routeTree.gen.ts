@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppProjectsProjectIdIndexRouteImport } from './routes/app/projects/$projectId/index'
 import { Route as AppProjectsProjectIdEnvironmentsEnvIdIndexRouteImport } from './routes/app/projects/$projectId/environments/$envId/index'
+import { Route as AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRouteImport } from './routes/app/projects/$projectId/environments/$envId/migrations/new/index'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -48,6 +49,12 @@ const AppProjectsProjectIdEnvironmentsEnvIdIndexRoute =
     path: '/projects/$projectId/environments/$envId/',
     getParentRoute: () => AppRouteRoute,
   } as any)
+const AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRoute =
+  AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRouteImport.update({
+    id: '/projects/$projectId/environments/$envId/migrations/new/',
+    path: '/projects/$projectId/environments/$envId/migrations/new/',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -56,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/projects/$projectId/': typeof AppProjectsProjectIdIndexRoute
   '/app/projects/$projectId/environments/$envId/': typeof AppProjectsProjectIdEnvironmentsEnvIdIndexRoute
+  '/app/projects/$projectId/environments/$envId/migrations/new/': typeof AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -63,6 +71,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/projects/$projectId': typeof AppProjectsProjectIdIndexRoute
   '/app/projects/$projectId/environments/$envId': typeof AppProjectsProjectIdEnvironmentsEnvIdIndexRoute
+  '/app/projects/$projectId/environments/$envId/migrations/new': typeof AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -72,6 +81,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/projects/$projectId/': typeof AppProjectsProjectIdIndexRoute
   '/app/projects/$projectId/environments/$envId/': typeof AppProjectsProjectIdEnvironmentsEnvIdIndexRoute
+  '/app/projects/$projectId/environments/$envId/migrations/new/': typeof AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -82,6 +92,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/projects/$projectId/'
     | '/app/projects/$projectId/environments/$envId/'
+    | '/app/projects/$projectId/environments/$envId/migrations/new/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +100,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/projects/$projectId'
     | '/app/projects/$projectId/environments/$envId'
+    | '/app/projects/$projectId/environments/$envId/migrations/new'
   id:
     | '__root__'
     | '/'
@@ -97,6 +109,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/projects/$projectId/'
     | '/app/projects/$projectId/environments/$envId/'
+    | '/app/projects/$projectId/environments/$envId/migrations/new/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -149,6 +162,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsProjectIdEnvironmentsEnvIdIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/projects/$projectId/environments/$envId/migrations/new/': {
+      id: '/app/projects/$projectId/environments/$envId/migrations/new/'
+      path: '/projects/$projectId/environments/$envId/migrations/new'
+      fullPath: '/app/projects/$projectId/environments/$envId/migrations/new/'
+      preLoaderRoute: typeof AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
@@ -156,6 +176,7 @@ interface AppRouteRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppProjectsProjectIdIndexRoute: typeof AppProjectsProjectIdIndexRoute
   AppProjectsProjectIdEnvironmentsEnvIdIndexRoute: typeof AppProjectsProjectIdEnvironmentsEnvIdIndexRoute
+  AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRoute: typeof AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
@@ -163,6 +184,8 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppProjectsProjectIdIndexRoute: AppProjectsProjectIdIndexRoute,
   AppProjectsProjectIdEnvironmentsEnvIdIndexRoute:
     AppProjectsProjectIdEnvironmentsEnvIdIndexRoute,
+  AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRoute:
+    AppProjectsProjectIdEnvironmentsEnvIdMigrationsNewIndexRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(

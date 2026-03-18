@@ -256,8 +256,257 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        /**
+         * Update environment
+         * @description Update an existing environment
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Environment ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description Environment update request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["environments.UpdateEnvironmentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["environments.Environment"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
+        /**
+         * Delete environment
+         * @description Delete an environment
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Environment ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/environments/{id}/migrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get environment migrations
+         * @description Get all migrations for a specific environment
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Environment ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["environments.EnvironmentMigration"][];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Run database migration
+         * @description Execute a database migration in an environment with full tracking
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Environment ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description Migration execution request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["environments.CreateEnvironmentMigrationRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/environments/{id}/migrations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview environment schema changes
+         * @description Preview database schema changes by running migration in a transaction
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Environment ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description Migration preview request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["environments.PreviewMigrationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["environments.SchemaColumn"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -296,6 +545,108 @@ export interface paths {
                         "application/json": {
                             [key: string]: unknown;
                         };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/environments/{id}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate environment connection
+         * @description Validate database connection for an environment
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Environment ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/migrations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get environment migration by ID
+         * @description Get a specific migration by ID
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Migration ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["environments.EnvironmentMigration"];
                     };
                 };
                 /** @description Internal Server Error */
@@ -679,28 +1030,60 @@ export interface components {
             email?: string;
             id?: string;
         };
-        "environments.CertificatesConfig": {
-            ca_cert?: string;
-            client_cert?: string;
-            client_key?: string;
+        "environments.CreateEnvironmentMigrationRequest": {
+            client_id: string;
+            description: string;
+            environment_id: string;
+            name: string;
+            sql_content: string;
         };
         "environments.CreateEnvironmentRequest": {
-            certificates?: components["schemas"]["environments.CertificatesConfig"];
             connection_url: string;
             name: string;
             project_id: string;
-            /** @enum {string} */
-            ssl_mode?: "disable" | "allow" | "prefer" | "require" | "verify-ca" | "verify-full";
+            /** @enum {unknown} */
+            type: "development" | "staging" | "production";
         };
         "environments.Environment": {
-            certificates_json?: string[];
             connection_error?: string;
-            connection_status?: string;
             created_at?: string;
             id?: string;
             name?: string;
             project_id?: string;
+            type?: components["schemas"]["environments.TypeofEnvironment"];
             updated_at?: string;
+        };
+        "environments.EnvironmentMigration": {
+            client_id?: string;
+            created_at?: string;
+            description?: string;
+            /** @description Duration in milliseconds to match INTEGER type */
+            duration?: number;
+            environment_id?: string;
+            error_message?: string;
+            executed_at?: string;
+            executed_by?: string;
+            id?: string;
+            name?: string;
+            sql_content?: string;
+            status?: string;
+        };
+        "environments.PreviewMigrationRequest": {
+            sql_content: string;
+        };
+        "environments.SchemaColumn": {
+            column_name?: string;
+            data_type?: string;
+            is_nullable?: string;
+            table_name?: string;
+        };
+        /** @enum {string} */
+        "environments.TypeofEnvironment": "development" | "staging" | "production";
+        "environments.UpdateEnvironmentRequest": {
+            connection_url: string;
+            name: string;
+            /** @enum {unknown} */
+            type: "development" | "staging" | "production";
         };
         "projects.CreateProjectRequest": {
             name: string;
