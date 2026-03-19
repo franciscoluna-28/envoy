@@ -19,6 +19,7 @@ type Environment struct {
 	ConnectionError           string            `json:"connection_error" db:"connection_error"`
 	CreatedAt                 time.Time         `json:"created_at" db:"created_at"`
 	UpdatedAt                 time.Time         `json:"updated_at" db:"updated_at"`
+	DbEngine                  string            `json:"db_engine" db:"db_engine"`
 }
 
 type EnvironmentDbUser struct {
@@ -94,4 +95,11 @@ type UpdateEnvironmentRequest struct {
 	Name          string            `json:"name" validate:"required"`
 	Type          TypeofEnvironment `json:"type" validate:"required,oneof=development staging production"`
 	ConnectionUrl string            `json:"connection_url" validate:"required"`
+}
+
+// The entire reason why I built Envoy, to be honest
+type TablePermission struct {
+	TableName  string   `json:"table_name"`
+	Privileges []string `json:"privileges"`
+	IsMissing  bool     `json:"is_missing"`
 }

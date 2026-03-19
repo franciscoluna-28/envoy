@@ -59,38 +59,40 @@ func UpdateMigrationErrorHelper(ctx context.Context, repo Repository, migrationI
 	return err
 }
 
-// @Helper Validates a database connection as a migrator user
-func ValidateDatabaseConnectionAsMigrator(ctx context.Context, conn DatabaseConnection) error {
+// @Helper Validates a database connection as a migrator user and returns version
+func ValidateDatabaseConnectionAsMigrator(ctx context.Context, conn DatabaseConnection) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	config, err := pgx.ParseConfig(conn.ConnectionString)
 	if err != nil {
-		return fmt.Errorf("invalid connection string: %w", err)
+		return "", fmt.Errorf("invalid connection string: %w", err)
 	}
 
 	pgConn, err := pgx.ConnectConfig(ctx, config)
 	if err != nil {
-		return fmt.Errorf("could not connect: %w", err)
+		return "", fmt.Errorf("could not connect: %w", err)
 	}
 	defer pgConn.Close(ctx)
 
-	if err := pgConn.Ping(ctx); err != nil {
-		return fmt.Errorf("database did not respond: %w", err)
+	var dbVersion string
+	err = pgConn.QueryRow(ctx, "SELECT version()").Scan(&dbVersion)
+	if err != nil {
+		return "", fmt.Errorf("could not get database version: %w", err)
 	}
 
 	var canCreate bool
 	query := `SELECT has_schema_privilege(current_user, 'public', 'CREATE')`
 	err = pgConn.QueryRow(ctx, query).Scan(&canCreate)
 	if err != nil {
-		return fmt.Errorf("could not check permissions: %w", err)
+		return "", fmt.Errorf("could not check permissions: %w", err)
 	}
 
 	if !canCreate {
-		return fmt.Errorf("the user can connect but does not have permission to create objects in the public schema")
+		return "", fmt.Errorf("user lacks CREATE permission in public schema")
 	}
 
-	return nil
+	return dbVersion, nil
 }
 
 // @UseCase Creates a new environment for a project
@@ -99,7 +101,8 @@ func CreateProjectEnvironment(ctx context.Context, input CreateEnvironmentReques
 		ConnectionString: input.ConnectionUrl,
 	}
 
-	if err := ValidateDatabaseConnectionAsMigrator(ctx, connInfo); err != nil {
+	dbVersion, err := ValidateDatabaseConnectionAsMigrator(ctx, connInfo)
+	if err != nil {
 		return fmt.Errorf("pre-storage validation failed: %w", err)
 	}
 
@@ -118,6 +121,7 @@ func CreateProjectEnvironment(ctx context.Context, input CreateEnvironmentReques
 		ConnectionStringEncrypted: string(encryptedURL),
 		CreatedAt:                 now,
 		UpdatedAt:                 now,
+		DbEngine:                  dbVersion,
 	}
 
 	err = repo.CreateEnvironment(ctx, environment)
@@ -205,7 +209,8 @@ func UpdateEnvironment(ctx context.Context, envID string, input UpdateEnvironmen
 		ConnectionString: input.ConnectionUrl,
 	}
 
-	if err := ValidateDatabaseConnectionAsMigrator(ctx, connInfo); err != nil {
+	_, err = ValidateDatabaseConnectionAsMigrator(ctx, connInfo)
+	if err != nil {
 		return nil, fmt.Errorf("pre-storage validation failed: %w", err)
 	}
 
@@ -293,24 +298,14 @@ func PreviewEnvironmentSchemaChanges(ctx context.Context, envID string, repo Rep
 
 // @UseCase Runs a database migration in an environment
 func RunDatabaseMigrationInEnvironment(ctx context.Context, envID string, repo Repository, migration CreateEnvironmentMigrationRequest, userId string, masterKey []byte, checkSumKey []byte) error {
-
 	ctx, cancel := context.WithTimeout(ctx, 8*time.Minute) // 8 minutes is a safe timeout for most migrations
 	defer cancel()
 
-	if err := repo.FindEnvironmentMigrationByClientId(ctx, migration.ClientId); err != nil {
-		// If the migration doesn't exist, that's expected - continue with creation
-		if errors.Is(err, ErrEnvironmentNotFound) {
-			// No existing migration found, proceed with creation
-		} else {
-			// Some other error occurred
-			return err
-		}
+	if err := repo.FindEnvironmentMigrationByClientId(ctx, migration.ClientId); err != nil && !errors.Is(err, ErrEnvironmentNotFound) {
+		return err
 	}
 
-	fmt.Printf("[DEBUG] Computing checksum for SQL content (length: %d)\n", len(migration.SQLContent))
-	fmt.Printf("[DEBUG] Checksum key length: %d\n", len(checkSumKey))
 	computedChecksum := GenerateSQLChecksum(migration.SQLContent, checkSumKey)
-	fmt.Printf("[DEBUG] Computed checksum: %s (length: %d)\n", computedChecksum, len(computedChecksum))
 
 	migrationID := uuid.New().String()
 	now := time.Now()
@@ -330,55 +325,41 @@ func RunDatabaseMigrationInEnvironment(ctx context.Context, envID string, repo R
 		ClientId:      migration.ClientId,
 	}
 
-	fmt.Printf("[DEBUG] Creating migration record with ID: %s\n", migrationID)
 	if err := repo.CreateEnvironmentMigration(ctx, envMigration); err != nil {
-		fmt.Printf("[DEBUG] Failed to create migration record: %v\n", err)
 		return fmt.Errorf("failed to create migration record: %w", err)
 	}
 
 	startTime := time.Now()
 
-	fmt.Printf("[DEBUG] Getting environment by ID: %s\n", envID)
 	env, err := repo.GetEnvironmentByID(ctx, envID)
 	if err != nil {
-		fmt.Printf("[DEBUG] Failed to get environment: %v\n", err)
 		return UpdateMigrationErrorHelper(ctx, repo, migrationID, err, startTime)
 	}
 
-	fmt.Printf("[DEBUG] Decrypting connection string (length: %d)\n", len(env.ConnectionStringEncrypted))
 	decryptedURL, err := DecryptFromAes256(env.ConnectionStringEncrypted, masterKey)
 	if err != nil {
-		fmt.Printf("[DEBUG] Failed to decrypt connection string: %v\n", err)
 		return UpdateMigrationErrorHelper(ctx, repo, migrationID, fmt.Errorf("failed to decrypt: %w", err), startTime)
 	}
 
-	fmt.Printf("[DEBUG] Connecting to database...\n")
 	pgConn, err := ConnectAsMigratorHelper(ctx, decryptedURL)
 	if err != nil {
-		fmt.Printf("[DEBUG] Failed to connect to database: %v\n", err)
 		return UpdateMigrationErrorHelper(ctx, repo, migrationID, err, startTime)
 	}
 	defer pgConn.Close(ctx)
 
-	fmt.Printf("[DEBUG] Beginning transaction...\n")
 	tx, err := pgConn.Begin(ctx)
 	if err != nil {
-		fmt.Printf("[DEBUG] Failed to begin transaction: %v\n", err)
 		return UpdateMigrationErrorHelper(ctx, repo, migrationID, err, startTime)
 	}
 
 	defer tx.Rollback(ctx)
 
-	fmt.Printf("[DEBUG] Executing SQL migration (length: %d)...\n", len(migration.SQLContent))
 	_, err = tx.Exec(ctx, migration.SQLContent)
 	if err != nil {
-		fmt.Printf("[DEBUG] SQL execution failed: %v\n", err)
 		return UpdateMigrationErrorHelper(ctx, repo, migrationID, fmt.Errorf("migration execution failed: %w", err), startTime)
 	}
 
-	fmt.Printf("[DEBUG] Committing transaction...\n")
 	if err := tx.Commit(ctx); err != nil {
-		fmt.Printf("[DEBUG] Failed to commit transaction: %v\n", err)
 		return UpdateMigrationErrorHelper(ctx, repo, migrationID, fmt.Errorf("failed to commit migration: %w", err), startTime)
 	}
 
@@ -387,12 +368,10 @@ func RunDatabaseMigrationInEnvironment(ctx context.Context, envID string, repo R
 	envMigration.Duration = executionTime
 	envMigration.ErrorMessage = ""
 
-	fmt.Printf("[DEBUG] Updating migration record with completion status (duration: %dms)...\n", executionTime)
 	if err := repo.UpdateEnvironmentMigration(ctx, envMigration); err != nil {
-		fmt.Printf("Warning: failed to update migration record: %v\n", err)
+		return fmt.Errorf("failed to update migration record: %w", err)
 	}
 
-	fmt.Printf("[DEBUG] Migration completed successfully!\n")
 	return nil
 }
 
@@ -463,6 +442,7 @@ func GetEnvironmentMigrationByID(ctx context.Context, migrationID string, repo R
 	return repo.GetEnvironmentMigrationByID(ctx, migrationID)
 }
 
+// @UseCase Validates that an environment can connect to the database as a migrator
 func ValidateEnvironmentConnection(ctx context.Context, envID string, repo Repository, masterKey []byte) error {
 	env, err := repo.GetEnvironmentByID(ctx, envID)
 	if err != nil {
@@ -474,7 +454,143 @@ func ValidateEnvironmentConnection(ctx context.Context, envID string, repo Repos
 		return fmt.Errorf("failed to decrypt: %w", err)
 	}
 
-	return ValidateDatabaseConnectionAsMigrator(ctx, DatabaseConnection{
+	_, err = ValidateDatabaseConnectionAsMigrator(ctx, DatabaseConnection{
 		ConnectionString: decryptedURL,
 	})
+	return err
+}
+
+// @UseCase Audits permissions before running a migration (preview schema mode)
+func AuditPermissionsBeforeMigration(ctx context.Context, envID string, repo Repository, sqlContent string, targetUser string, masterKey []byte) ([]TablePermission, error) {
+	env, err := repo.GetEnvironmentByID(ctx, envID)
+	if err != nil {
+		return nil, err
+	}
+
+	decryptedURL, err := DecryptFromAes256(env.ConnectionStringEncrypted, masterKey)
+	if err != nil {
+		return nil, err
+	}
+
+	config, _ := pgx.ParseConfig(decryptedURL)
+	conn, err := pgx.ConnectConfig(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close(ctx)
+
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx) // Rollback, this is not an actual migration
+
+	// Only execute the migration in the transaction context
+	if _, err := tx.Exec(ctx, sqlContent); err != nil {
+		return nil, fmt.Errorf("migration preview failed: %w", err)
+	}
+
+	// Change the app user to verify the new permissions we will give
+	setRole := fmt.Sprintf("SET ROLE %s", pgx.Identifier{targetUser}.Sanitize())
+	if _, err := tx.Exec(ctx, setRole); err != nil {
+		return nil, fmt.Errorf("app user '%s' not found in DB: %w", targetUser, err)
+	}
+
+	query := `
+        SELECT table_name, privilege_type 
+        FROM information_schema.table_privileges 
+        WHERE table_schema = 'public' 
+        AND grantee = current_user;`
+
+	rows, err := tx.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	permMap := make(map[string][]string)
+	for rows.Next() {
+		var table, priv string
+		rows.Scan(&table, &priv)
+		permMap[table] = append(permMap[table], priv)
+	}
+
+	var report []TablePermission
+	for table, privs := range permMap {
+		report = append(report, TablePermission{
+			TableName:  table,
+			Privileges: privs,
+			IsMissing:  len(privs) < 2, // Missing if they cannot do at least 2 operations (SELECT and INSERT)
+		})
+	}
+
+	return report, nil
+}
+
+// @UseCase Audits the current permissions of a specific database role
+func AuditPermissionsWithCurrentSchema(ctx context.Context, envID string, repo Repository, dbUser string, masterKey []byte) ([]TablePermission, error) {
+	env, err := repo.GetEnvironmentByID(ctx, envID)
+	if err != nil {
+		return nil, err
+	}
+
+	decryptedURL, err := DecryptFromAes256(env.ConnectionStringEncrypted, masterKey)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := pgx.ParseConfig(decryptedURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid connection string: %w", err)
+	}
+
+	conn, err := pgx.ConnectConfig(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("could not connect: %w", err)
+	}
+	defer conn.Close(ctx)
+
+	// Transaction only to isolate the SET ROLE command
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	setRole := fmt.Sprintf("SET ROLE %s", pgx.Identifier{dbUser}.Sanitize())
+	if _, err := tx.Exec(ctx, setRole); err != nil {
+		return nil, fmt.Errorf("app user '%s' not found in DB: %w", dbUser, err)
+	}
+
+	query := `
+        SELECT table_name, privilege_type 
+        FROM information_schema.table_privileges 
+        WHERE table_schema = 'public' 
+        AND grantee = current_user;`
+
+	rows, err := tx.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	permMap := make(map[string][]string)
+	for rows.Next() {
+		var table, priv string
+		if err := rows.Scan(&table, &priv); err != nil {
+			return nil, err
+		}
+		permMap[table] = append(permMap[table], priv)
+	}
+
+	var report []TablePermission
+	for table, privs := range permMap {
+		report = append(report, TablePermission{
+			TableName:  table,
+			Privileges: privs,
+			IsMissing:  len(privs) < 2, // Missing if they cannot do at least 2 operations (SELECT and INSERT)
+		})
+	}
+
+	return report, nil
 }
