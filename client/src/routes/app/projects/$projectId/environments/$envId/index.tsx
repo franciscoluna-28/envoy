@@ -168,7 +168,9 @@ function RouteComponent() {
             },
             {
               label: "Database Engine",
-              value: "PostgreSQL 16",
+              value: environmentData?.db_engine 
+                ? environmentData.db_engine.split(' on ')[0] 
+                : "PostgreSQL",
               icon: <Database className="w-3 h-3 text-stone-400" />,
             },
           ].map((stat) => (

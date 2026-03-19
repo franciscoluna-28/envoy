@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS environments (
     ),
     connection_string_encrypted TEXT NOT NULL,
     connection_error TEXT,
+    db_engine TEXT NOT NULL DEFAULT 'postgresql',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE

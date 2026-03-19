@@ -1047,6 +1047,7 @@ export interface components {
         "environments.Environment": {
             connection_error?: string;
             created_at?: string;
+            db_engine?: string;
             id?: string;
             name?: string;
             project_id?: string;

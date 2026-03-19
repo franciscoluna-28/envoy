@@ -33,11 +33,11 @@ func NewRepository(db *sqlx.DB) Repository {
 }
 
 func (r *repository) CreateEnvironment(ctx context.Context, env Environment) error {
-	query := `INSERT INTO environments (id, name, project_id, type, connection_string_encrypted, connection_error, created_at, updated_at) 
-			  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	query := `INSERT INTO environments (id, name, project_id, type, connection_string_encrypted, connection_error, created_at, updated_at, db_engine) 
+			  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 			  `
 
-	_, err := r.db.ExecContext(ctx, query, env.ID, env.Name, env.ProjectID, env.Type, env.ConnectionStringEncrypted, env.ConnectionError, env.CreatedAt, env.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, query, env.ID, env.Name, env.ProjectID, env.Type, env.ConnectionStringEncrypted, env.ConnectionError, env.CreatedAt, env.UpdatedAt, env.DbEngine)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (r *repository) CreateEnvironment(ctx context.Context, env Environment) err
 }
 
 func (r *repository) GetAllEnvironmentsByProjectID(ctx context.Context, projectID string) ([]Environment, error) {
-	query := `SELECT id, name, project_id, type, connection_string_encrypted, connection_error, created_at, updated_at 
+	query := `SELECT id, name, project_id, type, connection_string_encrypted, connection_error, created_at, updated_at, db_engine 
 			  FROM environments WHERE project_id = ?`
 
 	var envs []Environment
@@ -60,7 +60,7 @@ func (r *repository) GetAllEnvironmentsByProjectID(ctx context.Context, projectI
 }
 
 func (r *repository) GetEnvironmentByID(ctx context.Context, id string) (*Environment, error) {
-	query := `SELECT id, name, project_id, type, connection_string_encrypted, connection_error, created_at, updated_at 
+	query := `SELECT id, name, project_id, type, connection_string_encrypted, connection_error, created_at, updated_at, db_engine 
 			  FROM environments WHERE id = ?`
 
 	var env Environment

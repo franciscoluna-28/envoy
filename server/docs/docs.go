@@ -1052,6 +1052,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "db_engine": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },

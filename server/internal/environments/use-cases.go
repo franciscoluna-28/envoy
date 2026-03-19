@@ -102,6 +102,7 @@ func CreateProjectEnvironment(ctx context.Context, input CreateEnvironmentReques
 	}
 
 	dbVersion, err := ValidateDatabaseConnectionAsMigrator(ctx, connInfo)
+
 	if err != nil {
 		return fmt.Errorf("pre-storage validation failed: %w", err)
 	}
