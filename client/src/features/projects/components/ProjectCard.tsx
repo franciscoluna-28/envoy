@@ -1,10 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  MoreHorizontal,
-  Calendar,
-  Layout,
-} from "lucide-react";
+import { MoreHorizontal, Calendar, Layout } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import {
   DropdownMenu,
@@ -32,31 +28,31 @@ export function ProjectCard({ project, onUpdate, onDelete }: ProjectCardProps) {
         <div className="flex items-start justify-between mb-8">
           <div className="space-y-1.5">
             <h3 className="text-lg font-semibold tracking-tight text-stone-900 transition-colors line-clamp-1 flex items-center">
-              <Layout className="w-4 h-4 mr-2 text-stone-400  transition-colors" /> 
+              <Layout className="w-4 h-4 mr-2 text-stone-400  transition-colors" />
               {project.name || "Untitled Project"}
             </h3>
             <div className="flex items-center gap-2">
-   <Badge
-    variant="secondary"
-    className="bg-stone-100 text-[10px] px-1.5 py-0 h-4 font-bold border-none text-stone-500 uppercase tracking-wider"
-  >
-    POSTGRES
-  </Badge>
-  
-  <span className="text-stone-300 text-[10px]">•</span>
+              <Badge
+                variant="secondary"
+                className="bg-stone-100 text-[10px] px-1.5 py-0 h-4 font-bold border-none text-stone-500 uppercase tracking-wider"
+              >
+                POSTGRES
+              </Badge>
 
-  <div className="flex items-center gap-1.5 text-[11px] text-stone-400 font-medium">
-    <Calendar className="w-3 h-3 text-stone-300" />
-    <span>
-      {project.created_at 
-        ? new Date(project.created_at).toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric' 
-          }) 
-        : "Just now"}
-    </span>
-  </div>
-  </div>
+              <span className="text-stone-300 text-[10px]">•</span>
+
+              <div className="flex items-center gap-1.5 text-[11px] text-stone-400 font-medium">
+                <Calendar className="w-3 h-3 text-stone-300" />
+                <span>
+                  {project.created_at
+                    ? new Date(project.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : "Just now"}
+                </span>
+              </div>
+            </div>
           </div>
 
           <DropdownMenu>
@@ -98,11 +94,7 @@ export function ProjectCard({ project, onUpdate, onDelete }: ProjectCardProps) {
             className="w-full"
             params={{ projectId: project.id || "" }}
           >
-            <Button 
-              variant="secondary" 
-              size="lg"
-              className="w-full"
-            >
+            <Button variant="secondary" size="lg" className="w-full">
               Open Project
             </Button>
           </Link>

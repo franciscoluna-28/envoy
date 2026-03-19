@@ -1,4 +1,4 @@
-// Components
+
 export { ProjectCard } from './components/ProjectCard'
 export { CreateProjectModal } from './components/CreateProjectModal'
 export { UpdateProjectModal } from './components/UpdateProjectModal'
@@ -7,17 +7,8 @@ export { EnvironmentCard } from './components/EnvironmentCard'
 export { EnvironmentList } from './components/EnvironmentList'
 export { EmptyEnvironmentsState } from './components/EmptyEnvironmentsState'
 export { CreateEnvironmentModal } from './components/CreateEnvironmentModal'
-export { DatabaseSchema } from './components/DatabaseSchema'
-export { SimpleDatabaseSchema } from './components/SimpleDatabaseSchema'
-export { SimpleReactFlowSchema } from './components/SimpleReactFlowSchema'
-export { SimpleGridSchema } from './components/SimpleGridSchema'
-export { ReactFlowGridSchema } from './components/ReactFlowGridSchema'
-export { MinimalSchema } from './components/MinimalSchema'
-export { CompactGridSchema } from './components/CompactGridSchema'
-export { ShadcnReactFlowSchema } from './components/ShadcnReactFlowSchema'
+export { CurrentDatabaseSchema } from './components/CurrentDatabaseSchema'
 export { CreateMigrationDialog } from './components/CreateMigrationDialog'
-
-// Hooks
 export { useGetAllProjects, useGetProject, useCreateProject, useUpdateProject, useDeleteProject } from './hooks/useProjects'
 export { useGetEnvironments, useCreateEnvironment } from './hooks/useEnvironments'
 export { useEnvironmentSchema } from './hooks/useEnvironmentSchema'

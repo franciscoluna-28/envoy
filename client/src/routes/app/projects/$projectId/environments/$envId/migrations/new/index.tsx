@@ -37,12 +37,9 @@ function RouteComponent() {
   const [sqlValue, setSqlValue] = useState("");
   const [migrationName, setMigrationName] = useState("");
   const [description, setDescription] = useState("");
-  const [permissionTestEnabled, setPermissionTestEnabled] = useState(false); 
+  const [permissionTestEnabled, setPermissionTestEnabled] = useState(false);
   const { isLoading: projectLoading } = useGetProject(projectId);
-  const { isLoading: envLoading } = useGetEnvironment(
-    projectId,
-    envId,
-  ); 
+  const { isLoading: envLoading } = useGetEnvironment(projectId, envId);
   const previewSchema = usePreviewSchemaChanges();
   const runMigration = useRunMigration();
   const validateConnection = useValidateEnvironmentConnection();
@@ -133,8 +130,7 @@ function RouteComponent() {
           <div className="space-y-4">
                        {" "}
             <div className="grid gap-1.5">
-                            <Label>Migration Name</Label>
-                           {" "}
+                            <Label>Migration Name</Label>             {" "}
               <Input
                 className="text-sm"
                 placeholder="add_performance_indexes"
@@ -145,8 +141,7 @@ function RouteComponent() {
             </div>
                        {" "}
             <div className="grid gap-1.5">
-                            <Label>Description</Label>
-                           {" "}
+                            <Label>Description</Label>             {" "}
               <Textarea
                 className="text-sm min-h-[80px]"
                 placeholder="Adding composite index to optimize feed query..."
@@ -176,68 +171,72 @@ function RouteComponent() {
                         Preview Schema Changes        {" "}
           </Button>
                    {" "}
-<Card className="p-4 bg-muted/30 border-dashed border-red-500/20">
-  <div className="flex items-center justify-between mb-3">
-    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-      Simulation Results
-    </span>
-    {previewSchema.data ? (
-      <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-    ) : previewSchema.error ? (
-      <XCircle className="h-3 w-3 text-destructive" />
-    ) : previewSchema.isPending ? (
-      <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-    ) : (
-      <AlertTriangle className="h-3 w-3 text-muted-foreground" />
-    )}
-  </div>
+          <Card className="p-4 bg-muted/30 border-dashed border-red-500/20">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Simulation Results
+              </span>
+              {previewSchema.data ? (
+                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+              ) : previewSchema.error ? (
+                <XCircle className="h-3 w-3 text-destructive" />
+              ) : previewSchema.isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              ) : (
+                <AlertTriangle className="h-3 w-3 text-muted-foreground" />
+              )}
+            </div>
 
-  <ScrollArea className="h-72 w-full rounded-md">
-  <div className="space-y-2 pr-4">
-    {previewSchema.error && (
-      <div className="mb-4 space-y-2">
-        <div className="flex items-center gap-2 text-[10px] font-bold text-red-600 uppercase tracking-tight">
-          <Terminal className="h-3 w-3" />
-          Simulation Error
-        </div>
-        {previewSchema.error.errors?.map((err: string, i: number) => (
-          <div 
-            key={i} 
-            className="p-2 rounded bg-red-50 border border-red-100 font-mono text-[10px] text-red-800 break-words"
-          >
-            {err}
-          </div>
-        ))}
-      </div>
-    )}
-    {previewSchema.data && !previewSchema.error ? (
-      previewSchema.data.map((column, index) => (
-        <div key={index}>
-          <ResultItem
-            label={`${column.table_name}.${column.column_name}`}
-            subLabel={column.data_type}
-          />
-          {index < previewSchema.data.length - 1 && (
-            <Separator className="my-2 opacity-30" />
-          )}
-        </div>
-      ))
-    ) : (
-      !previewSchema.isPending && !previewSchema.error && (
-        <div className="space-y-3 opacity-40">
-          <ResultItem label="Enter SQL and click Preview" isPending />
-          <ResultItem label="Syntax Check Pending" isPending />
-        </div>
-      )
-    )}
-    {previewSchema.isPending && (
-      <div className="flex items-center justify-center p-8 opacity-50">
-        <Loader2 className="h-4 w-4 animate-spin" />
-      </div>
-    )}
-  </div>
-</ScrollArea>
-</Card>
+            <ScrollArea className="h-72 w-full rounded-md">
+              <div className="space-y-2 pr-4">
+                {previewSchema.error && (
+                  <div className="mb-4 space-y-2">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-red-600 uppercase tracking-tight">
+                      <Terminal className="h-3 w-3" />
+                      Simulation Error
+                    </div>
+                    {previewSchema.error.errors?.map(
+                      (err: string, i: number) => (
+                        <div
+                          key={i}
+                          className="p-2 rounded bg-red-50 border border-red-100 font-mono text-[10px] text-red-800 break-words"
+                        >
+                          {err}
+                        </div>
+                      ),
+                    )}
+                  </div>
+                )}
+                {previewSchema.data && !previewSchema.error
+                  ? previewSchema.data.map((column, index) => (
+                      <div key={index}>
+                        <ResultItem
+                          label={`${column.table_name}.${column.column_name}`}
+                          subLabel={column.data_type}
+                        />
+                        {index < previewSchema.data.length - 1 && (
+                          <Separator className="my-2 opacity-30" />
+                        )}
+                      </div>
+                    ))
+                  : !previewSchema.isPending &&
+                    !previewSchema.error && (
+                      <div className="space-y-3 opacity-40">
+                        <ResultItem
+                          label="Enter SQL and click Preview"
+                          isPending
+                        />
+                        <ResultItem label="Syntax Check Pending" isPending />
+                      </div>
+                    )}
+                {previewSchema.isPending && (
+                  <div className="flex items-center justify-center p-8 opacity-50">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </Card>
                    {" "}
           <Card className="p-4">
                        {" "}
@@ -323,14 +322,14 @@ function RouteComponent() {
   );
 }
 
-function ResultItem({ 
-  label, 
-  subLabel, 
-  isPending 
-}: { 
-  label: string; 
-  subLabel?: string; 
-  isPending?: boolean 
+function ResultItem({
+  label,
+  subLabel,
+  isPending,
+}: {
+  label: string;
+  subLabel?: string;
+  isPending?: boolean;
 }) {
   return (
     <div className="flex items-center gap-3 text-[11px] font-mono py-0.5">
@@ -342,7 +341,9 @@ function ResultItem({
       <div className="flex flex-col truncate">
         <span className="text-stone-800 font-bold truncate">{label}</span>
         {subLabel && (
-          <span className="text-[9px] text-muted-foreground uppercase">{subLabel}</span>
+          <span className="text-[9px] text-muted-foreground uppercase">
+            {subLabel}
+          </span>
         )}
       </div>
     </div>
