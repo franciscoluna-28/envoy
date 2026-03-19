@@ -491,19 +491,14 @@ func AuditPermissionsBeforeMigration(ctx context.Context, envID string, repo Rep
 		return nil, fmt.Errorf("migration preview failed: %w", err)
 	}
 
-	// Change the app user to verify the new permissions we will give
-	setRole := fmt.Sprintf("SET ROLE %s", pgx.Identifier{targetUser}.Sanitize())
-	if _, err := tx.Exec(ctx, setRole); err != nil {
-		return nil, fmt.Errorf("app user '%s' not found in DB: %w", targetUser, err)
-	}
-
 	query := `
-        SELECT table_name, privilege_type 
-        FROM information_schema.table_privileges 
-        WHERE table_schema = 'public' 
-        AND grantee = current_user;`
+    SELECT table_name, privilege_type 
+    FROM information_schema.table_privileges 
+    WHERE grantee = $1 
+    AND table_schema = 'public'
+    ORDER BY table_name;`
 
-	rows, err := tx.Query(ctx, query)
+	rows, err := tx.Query(ctx, query, targetUser)
 	if err != nil {
 		return nil, err
 	}
@@ -564,12 +559,13 @@ func AuditPermissionsWithCurrentSchema(ctx context.Context, envID string, repo R
 	}
 
 	query := `
-        SELECT table_name, privilege_type 
-        FROM information_schema.table_privileges 
-        WHERE table_schema = 'public' 
-        AND grantee = current_user;`
+    SELECT table_name, privilege_type 
+    FROM information_schema.table_privileges 
+    WHERE grantee = $1 
+    AND table_schema = 'public'
+    ORDER BY table_name;`
 
-	rows, err := tx.Query(ctx, query)
+	rows, err := tx.Query(ctx, query, dbUser)
 	if err != nil {
 		return nil, err
 	}
