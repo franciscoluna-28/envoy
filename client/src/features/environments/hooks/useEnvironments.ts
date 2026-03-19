@@ -3,7 +3,7 @@ import client from "@/api/client";
 import { toast } from "sonner";
 import { ENVIRONMENTS_QUERY_KEYS } from "@/features/keys";
 import type {
-  CreteEnvironmentInput,
+    CreateEnvironmentInput,
   EnvironmentId,
   ProjectId,
 } from "@/features/types";
@@ -38,7 +38,7 @@ export function useCreateEnvironment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreteEnvironmentInput) => {
+    mutationFn: async (data: CreateEnvironmentInput) => {
       const response = await client.POST("/projects/{id}/environments", {
         params: { path: { id: data.project_id } },
         body: {

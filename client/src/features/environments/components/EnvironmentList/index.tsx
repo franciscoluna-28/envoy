@@ -1,5 +1,5 @@
 import type { Environment } from '@/features/types'
-import { EmptyEnvironmentsState } from '../../EmptyEnvironmentState'
+import { EmptyEnvironmentsState } from '../EmptyEnvironmentState'
 import { EnvironmentCard } from '../EnvironmentCard'
 
 interface EnvironmentListProps {

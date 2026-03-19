@@ -10,6 +10,7 @@ import {
   Terminal,
   Loader2,
   XCircle,
+  Database,
 } from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Label } from "@/components/ui/label";
@@ -17,16 +18,21 @@ import { SQLEditor } from "@/features/environments/components/SQLEditor";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useGetEnvironment } from "@/features/environments/hooks/useEnvironments";
+import { MigrationConfirmDialog } from "@/features/environments/components/MigrationConfirmDialog";
 import { useGetProject } from "@/features/projects/hooks/useProjects";
+import { useEnvironmentSchema } from "@/features/environments/hooks/useEnvironmentSchema";
 import {
   usePreviewSchemaChanges,
   useRunMigration,
-  useValidateEnvironmentConnection,
+  useTestPermissionsWithPreview,
+  useTestPermissionsWithCurrentSchema,
 } from "@/features/environments/hooks/useMigrations";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingState } from "@/components/shared/LoadingState";
 import type { PreviewError } from "@/features/types";
+import { PermissionResultsModal } from "@/features/environments/components/PermissionResultsModal";
+import { SimulationResultsModal } from "@/features/environments/components/SimulationResultsModal";
 
 export const Route = createFileRoute(
   "/app/projects/$projectId/environments/$envId/migrations/new/",
@@ -40,12 +46,30 @@ function RouteComponent() {
   const [migrationName, setMigrationName] = useState("");
   const [description, setDescription] = useState("");
   const [permissionTestEnabled, setPermissionTestEnabled] = useState(false);
+  const [databaseUser, setDatabaseUser] = useState("");
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [permissionResults, setPermissionResults] = useState<any[]>([]);
+  const [permissionModalTitle, setPermissionModalTitle] = useState("");
+  const [showSimulationModal, setShowSimulationModal] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { isLoading: projectLoading } = useGetProject(projectId);
-  const { isLoading: envLoading } = useGetEnvironment(projectId, envId);
+  const { isLoading: envLoading, data: environmentData } = useGetEnvironment(
+    projectId,
+    envId,
+  );
+  const { data: currentSchema } = useEnvironmentSchema(envId);
   const previewSchema = usePreviewSchemaChanges();
   const runMigration = useRunMigration();
-  const validateConnection = useValidateEnvironmentConnection();
+  const testPermissionsWithPreview = useTestPermissionsWithPreview();
+  const testPermissionsWithCurrentSchema =
+    useTestPermissionsWithCurrentSchema();
   const isLoading = projectLoading || envLoading;
+
+  // Reset schema preview when SQL changes
+  const handleSqlChange = (value: string) => {
+    setSqlValue(value);
+    previewSchema.reset();
+  };
 
   if (isLoading) {
     return <LoadingState />;
@@ -54,11 +78,53 @@ function RouteComponent() {
   return (
     <div className="flex flex-col h-full bg-background text-foreground antialiased">
       <div className="flex justify-between items-center py-6">
-        <h1 className="text-xl font-bold tracking-tight">New Migration</h1>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-xl font-bold tracking-tight">New Migration</h1>
+          <Badge className="capitalize" variant="secondary">
+            {environmentData?.type}
+          </Badge>
+        </div>
+        <Button
+          size="lg"
+          onClick={() => {
+            if (!migrationName.trim()) {
+              toast.error("Please enter a migration name");
+              return;
+            }
+            if (!description.trim()) {
+              toast.error("Please enter a description");
+              return;
+            }
+            if (!sqlValue.trim()) {
+              toast.error("Please enter SQL content");
+              return;
+            }
+            if (!previewSchema.data || previewSchema.error) {
+              toast.error(
+                "Please preview schema first before applying migration",
+              );
+              return;
+            }
+            setShowConfirmDialog(true);
+          }}
+          disabled={
+            runMigration.isPending ||
+            !migrationName.trim() ||
+            !description.trim() ||
+            !sqlValue.trim() ||
+            !previewSchema.data ||
+            !!previewSchema.error
+          }
+        >
+          {runMigration.isPending && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Apply Migration
+        </Button>
       </div>
 
       <div className="flex-1 grid grid-cols-12 gap-6">
-        <div className="col-span-8 flex flex-col h-[calc(100vh-180px)]">
+        <div className="col-span-8 flex flex-col">
           <div className="flex flex-col h-full rounded-lg border shadow-sm overflow-hidden bg-background">
             <div className="bg-zinc-50/80 border-b px-3 py-2 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
@@ -83,7 +149,7 @@ function RouteComponent() {
             </div>
             <div className="flex-1 min-h-[300px] relative">
               <div className="absolute inset-0">
-                <SQLEditor value={sqlValue} onChange={setSqlValue} />
+                <SQLEditor value={sqlValue} onChange={handleSqlChange} />
               </div>
             </div>
             <div className="px-3 py-1.5 bg-zinc-50/50 border-t flex items-center justify-between shrink-0">
@@ -114,7 +180,6 @@ function RouteComponent() {
 
         <aside className="col-span-4 flex flex-col space-y-4">
           <Card className="p-4 border">
-           
             <div className="space-y-3">
               <div className="grid gap-1.5">
                 <Label className="text-xs">Migration Name</Label>
@@ -139,26 +204,9 @@ function RouteComponent() {
           </Card>
 
           <Card className="p-4 border">
-         
-            <div className="space-y-3">
-              <Button
-                className="w-full text-sm"
-                onClick={() => {
-                  if (!sqlValue.trim()) {
-                    toast.error("Please enter SQL content");
-                    return;
-                  }
-                  previewSchema.mutate({ envId, sqlContent: sqlValue });
-                }}
-                disabled={previewSchema.isPending || !sqlValue.trim()}
-              >
-                {previewSchema.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Preview Schema Changes
-              </Button>
-
-              <div className="flex items-center justify-between p-3 rounded border border-dashed bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+            <div className="space-y-4">
+              <div
+                className="flex items-center justify-between p-3 rounded border border-dashed bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
                 onClick={() => setPermissionTestEnabled(!permissionTestEnabled)}
               >
                 <div className="space-y-0.5">
@@ -175,30 +223,114 @@ function RouteComponent() {
               </div>
 
               {permissionTestEnabled && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => {
-                    validateConnection.mutate(envId);
-                  }}
-                  disabled={validateConnection.isPending}
-                >
-                  {validateConnection.isPending && (
-                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                  )}
-                  Validate Connection
-                </Button>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="database-user"
+                      className="text-xs font-medium"
+                    >
+                      Database User
+                    </Label>
+                    <Input
+                      id="database-user"
+                      placeholder="Enter database username to test against"
+                      value={databaseUser}
+                      onChange={(e) => setDatabaseUser(e.target.value)}
+                      className="text-xs"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => {
+                        testPermissionsWithCurrentSchema.mutate(
+                          {
+                            envId,
+                            databaseUser: databaseUser.trim(),
+                          },
+                          {
+                            onSuccess: (results) => {
+                              setPermissionResults(results);
+                              setPermissionModalTitle(
+                                `Current Schema Permissions for "${databaseUser.trim()}"`,
+                              );
+                              setShowPermissionModal(true);
+                            },
+                          },
+                        );
+                      }}
+                      disabled={
+                        testPermissionsWithCurrentSchema.isPending ||
+                        !databaseUser.trim()
+                      }
+                    >
+                      {testPermissionsWithCurrentSchema.isPending && (
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      )}
+                      Test Current Schema
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => {
+                        if (!sqlValue.trim()) {
+                          toast.error("Please enter SQL content first");
+                          return;
+                        }
+                        testPermissionsWithPreview.mutate(
+                          {
+                            envId,
+                            databaseUser: databaseUser.trim(),
+                            sqlContent: sqlValue.trim(),
+                          },
+                          {
+                            onSuccess: (results) => {
+                              setPermissionResults(results);
+                              setPermissionModalTitle(
+                                `Preview Schema Permissions for "${databaseUser.trim()}"`,
+                              );
+                              setShowPermissionModal(true);
+                            },
+                          },
+                        );
+                      }}
+                      disabled={
+                        testPermissionsWithPreview.isPending ||
+                        !databaseUser.trim() ||
+                        !sqlValue.trim()
+                      }
+                    >
+                      {testPermissionsWithPreview.isPending && (
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      )}
+                      Test Preview
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
           </Card>
 
-          {/* Results Section - Simulation Output */}
-          <Card className="p-4 bg-muted/30 border-dashed flex-1 flex flex-col">
+          <Card className="p-4 bg-muted/30 border-dashed flex-1 flex flex-col max-h-[300px]">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Simulation Results
-              </span>
+              <div className="flex items-center gap-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Simulation Results
+                </Label>
+                {previewSchema.data && !previewSchema.error && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowSimulationModal(true)}
+                  >
+                    <Database className="mr-2 h-3 w-3" />
+                    View Detailed Results
+                  </Button>
+                )}
+              </div>
               {previewSchema.data ? (
                 <CheckCircle2 className="h-3 w-3 text-emerald-600" />
               ) : previewSchema.error ? (
@@ -210,7 +342,7 @@ function RouteComponent() {
               )}
             </div>
 
-            <ScrollArea className="flex-1 w-full rounded-md">
+            <ScrollArea className="flex-1 w-full rounded-md max-h-[400px]">
               <div className="space-y-2 pr-4">
                 {previewSchema.error && (
                   <div className="mb-4 space-y-2">
@@ -230,14 +362,14 @@ function RouteComponent() {
                     )}
                   </div>
                 )}
-                {previewSchema.data && !previewSchema.error
-                  ? previewSchema.data.map((column, index) => (
+                {Array.isArray(previewSchema.data) && !previewSchema.error
+                  ? previewSchema.data.map((column, index, array) => (
                       <div key={index}>
                         <ResultItem
                           label={`${column.table_name}.${column.column_name}`}
                           subLabel={column.data_type}
                         />
-                        {index < previewSchema.data.length - 1 && (
+                        {index < array.length - 1 && (
                           <Separator className="my-2 opacity-30" />
                         )}
                       </div>
@@ -261,45 +393,62 @@ function RouteComponent() {
             </ScrollArea>
           </Card>
 
-          {/* Execute Section - Final Action */}
           <Button
+          variant="secondary"
             size="lg"
             className="w-full"
             onClick={() => {
-              if (!migrationName.trim()) {
-                toast.error("Please enter a migration name");
-                return;
-              }
-              if (!description.trim()) {
-                toast.error("Please enter a description");
-                return;
-              }
               if (!sqlValue.trim()) {
-                toast.error("Please enter SQL content");
+                toast.error("Please enter SQL content first");
                 return;
               }
-              runMigration.mutate({
+              previewSchema.mutate({
                 envId,
-                name: migrationName,
-                description: description,
-                sqlContent: sqlValue,
-                clientId: `migration_${Math.random().toString(36).substr(2, 9)}`,
+                sqlContent: sqlValue.trim(),
               });
             }}
-            disabled={
-              runMigration.isPending ||
-              !migrationName.trim() ||
-              !description.trim() ||
-              !sqlValue.trim()
-            }
+            disabled={previewSchema.isPending || !sqlValue.trim()}
           >
-            {runMigration.isPending && (
+            {previewSchema.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Apply Migration
+            Preview Migration Schema
           </Button>
-        </aside>
+
+          </aside>
       </div>
+      <PermissionResultsModal
+        databaseUser={databaseUser}
+        isOpen={showPermissionModal}
+        onClose={() => setShowPermissionModal(false)}
+        permissions={permissionResults}
+        title={permissionModalTitle}
+      />
+
+      <SimulationResultsModal
+        open={showSimulationModal}
+        onOpenChange={setShowSimulationModal}
+        simulationResults={previewSchema.data || []}
+        currentSchema={currentSchema || []}
+        onClose={() => setShowSimulationModal(false)}
+      />
+
+      <MigrationConfirmDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        onConfirm={() => {
+          runMigration.mutate({
+            envId,
+            name: migrationName,
+            description: description,
+            sqlContent: sqlValue,
+            clientId: `migration_${Math.random().toString(36).substr(2, 9)}`,
+          });
+        }}
+        environmentName={environmentData?.name || envId}
+        environmentType={environmentData?.type}
+        isLoading={runMigration.isPending}
+      />
     </div>
   );
 }

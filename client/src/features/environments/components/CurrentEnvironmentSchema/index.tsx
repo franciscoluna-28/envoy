@@ -7,7 +7,7 @@ import type { DatabaseSchemaItem, SchemaColumn } from "@/features/types";
 import { LoadingState } from "@/components/shared/LoadingState";
 
 interface CurrentDatabaseSchemaProps {
-  schema: DatabaseSchemaItem;
+  schema: DatabaseSchemaItem[];
   isLoading?: boolean;
 }
 

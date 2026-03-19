@@ -10,7 +10,7 @@ export function useEnvironmentSchema(envId: EnvironmentId) {
       const response = await client.GET('/environments/{id}/schema', {
         params: { path: { id: envId } }
       })
-      return response.data as unknown as DatabaseSchemaItem
+      return response.data as unknown as DatabaseSchemaItem[]
     },
     enabled: !!envId
   })

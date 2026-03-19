@@ -3,7 +3,7 @@ import client from '@/api/client'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 import { MIGRATIONS_QUERY_KEYS } from '@/features/keys'
-import type { EnvironmentId, SchemaColumn, PreviewError } from '@/features/types'
+import type { EnvironmentId, SchemaColumn, PreviewError, TablePermission } from '@/features/types'
 
 export function useGetEnvironmentMigrations(envId: EnvironmentId) {
   return useQuery({
@@ -45,16 +45,10 @@ export function usePreviewSchemaChanges() {
         throw error
       }
       
-      return response.data as SchemaColumn[]
+      // Don't display a toast as errors are displayed directly on the UI
+      // The API returns { data: Array, message: string, success: boolean }
+      return (response.data as any).data as SchemaColumn[]
     },
-    onError: (error: PreviewError) => {
-      const errorMessage = error.errors?.length 
-        ? error.errors.join('; ') 
-        : error.message || 'Failed to preview schema changes'
-      
-      toast.error(errorMessage)
-      console.error('Preview error:', error)
-    }
   })
 }
 
@@ -115,7 +109,6 @@ export function useRunMigration() {
         : error.message || 'Failed to run migration'
       
       toast.error(errorMessage)
-      console.error('Migration error:', error)
     }
   })
 }
@@ -140,6 +133,59 @@ export function useRunMigration() {
       const errorMessage = error.message || 'Failed to validate environment connection'
       toast.error(errorMessage)
       console.error('Validation error:', error)
+    }
+  })
+}
+
+export function useTestPermissionsWithPreview() {
+  return useMutation<TablePermission[], Error, { envId: EnvironmentId; databaseUser: string; sqlContent: string }>({
+    mutationFn: async ({ envId, databaseUser, sqlContent }) => {
+      const response = await client.POST('/environments/{id}/test-permissions-preview' as any, {
+        params: { path: { id: envId } },
+        body: {
+          database_user: databaseUser,
+          sql_content: sqlContent
+        }
+      } as any)
+      
+      if ((response as any).error) {
+        throw new Error((response as any).error.message || 'Failed to test permissions with preview')
+      }
+      
+      const results = ((response as any).data as any).data as TablePermission[]
+      console.log('Permission test with preview results:', results);
+      return results
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || 'Failed to test permissions'
+      toast.error(errorMessage)
+      console.error('Permission test error:', error)
+    }
+  })
+}
+
+export function useTestPermissionsWithCurrentSchema() {
+  return useMutation<TablePermission[], Error, { envId: EnvironmentId; databaseUser: string }>({
+    mutationFn: async ({ envId, databaseUser }) => {
+      const response = await client.POST('/environments/{id}/test-permissions-current' as any, {
+        params: { path: { id: envId } },
+        body: {
+          database_user: databaseUser
+        }
+      } as any)
+      
+      if ((response as any).error) {
+        throw new Error((response as any).error.message || 'Failed to test permissions with current schema')
+      }
+      
+      const results = ((response as any).data as any).data as TablePermission[]
+      console.log('Permission test with current schema results:', results);
+      return results
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || 'Failed to test permissions'
+      toast.error(errorMessage)
+      console.error('Permission test error:', error)
     }
   })
 }
