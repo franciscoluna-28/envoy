@@ -91,6 +91,15 @@ type PreviewMigrationRequest struct {
 	SQLContent string `json:"sql_content" validate:"required"`
 }
 
+type TestPermissionsRequest struct {
+	DatabaseUser string `json:"database_user" validate:"required"`
+	SQLContent   string `json:"sql_content,omitempty"`
+}
+
+type TestPermissionsWithCurrentSchemaRequest struct {
+	DatabaseUser string `json:"database_user" validate:"required"`
+}
+
 type UpdateEnvironmentRequest struct {
 	Name          string            `json:"name" validate:"required"`
 	Type          TypeofEnvironment `json:"type" validate:"required,oneof=development staging production"`

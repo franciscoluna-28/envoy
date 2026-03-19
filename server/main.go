@@ -103,6 +103,8 @@ func main() {
 				r.Get("/migrations/{id}", environmentHandler.GetEnvironmentMigrationByID)
 				r.Post("/environments/{id}/validate", environmentHandler.ValidateEnvironmentConnection)
 				r.Post("/environments/{id}/verify-permissions", environmentHandler.VerifyDatabasePermissions)
+				r.Post("/environments/{id}/test-permissions-preview", environmentHandler.TestPermissionsWithPreview)
+				r.Post("/environments/{id}/test-permissions-current", environmentHandler.TestPermissionsWithCurrentSchema)
 			})
 		})
 	})

@@ -349,3 +349,73 @@ func (h *Handler) ValidateEnvironmentConnection(w http.ResponseWriter, r *http.R
 
 	response.WriteJSON(w, http.StatusOK, response.ErrorResponse{Message: "Environment connection validated successfully"})
 }
+
+// TestPermissionsWithPreview godoc
+// @Summary Test permissions with preview schema
+// @Description Test database user permissions against schema changes in a transaction
+// @Tags environments
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Environment ID"
+// @Param request body TestPermissionsRequest true "Permission test request"
+// @Success 200 {array} TablePermission
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /environments/{id}/test-permissions-preview [post]
+func (h *Handler) TestPermissionsWithPreview(w http.ResponseWriter, r *http.Request) {
+	envID := chi.URLParam(r, "id")
+
+	var req TestPermissionsRequest
+	if err := response.ParseAndValidate(r, h.validator, &req); err != nil {
+		response.WriteValidationError(w, err)
+		return
+	}
+
+	permissions, err := AuditPermissionsBeforeMigration(r.Context(), envID, h.repo, req.SQLContent, req.DatabaseUser, h.masterKey)
+	if err != nil {
+		response.WriteJSON(w, http.StatusBadRequest, response.ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	response.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"data":    permissions,
+		"message": "Permission test completed successfully",
+	})
+}
+
+// TestPermissionsWithCurrentSchema godoc
+// @Summary Test permissions with current schema
+// @Description Test database user permissions against current schema
+// @Tags environments
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Environment ID"
+// @Param request body TestPermissionsWithCurrentSchemaRequest true "Permission test request"
+// @Success 200 {array} TablePermission
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /environments/{id}/test-permissions-current [post]
+func (h *Handler) TestPermissionsWithCurrentSchema(w http.ResponseWriter, r *http.Request) {
+	envID := chi.URLParam(r, "id")
+
+	var req TestPermissionsWithCurrentSchemaRequest
+	if err := response.ParseAndValidate(r, h.validator, &req); err != nil {
+		response.WriteValidationError(w, err)
+		return
+	}
+
+	permissions, err := AuditPermissionsWithCurrentSchema(r.Context(), envID, h.repo, req.DatabaseUser, h.masterKey)
+	if err != nil {
+		response.WriteJSON(w, http.StatusBadRequest, response.ErrorResponse{Message: err.Error()})
+		return
+	}
+
+	response.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"data":    permissions,
+		"message": "Permission test completed successfully",
+	})
+}
