@@ -3,7 +3,7 @@ import { Database, Hash, Lock, Table as TableIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import type { DatabaseSchemaItem } from "@/features/types";
+import type { DatabaseSchemaItem, SchemaColumn } from "@/features/types";
 import { LoadingState } from "@/components/shared/LoadingState";
 
 interface CurrentDatabaseSchemaProps {
@@ -19,7 +19,7 @@ export function CurrentDatabaseSchema({
     return <LoadingState />;
   }
 
-  if (!schema || Object.keys(schema).length === 0) {
+  if (!schema || schema.length === 0) {
     return (
       <div className="h-[200px] flex items-center justify-center border border-dashed rounded-lg bg-stone-50/10">
         <div className="text-center">
@@ -33,8 +33,18 @@ export function CurrentDatabaseSchema({
   }
 
   const groupedByTable = useMemo(() => {
-    // schema is an object where keys are table names and values are arrays of columns
-    return schema as Record<string, any[]>;
+    // schema is a flat array of columns, group them by table_name
+    const grouped: Record<string, SchemaColumn[]> = {};
+    
+    schema.forEach((column) => {
+      const tableName = column.table_name || 'unknown_table';
+      if (!grouped[tableName]) {
+        grouped[tableName] = [];
+      }
+      grouped[tableName].push(column);
+    });
+    
+    return grouped;
   }, [schema]);
 
   return (
@@ -65,7 +75,7 @@ export function CurrentDatabaseSchema({
               <TableBody>
                 {columns.map((col, index) => {
                   const isPK =
-                    col.column_name === "id" || col.column_name.endsWith("_id");
+                    col.column_name === "id" || col.column_name?.endsWith("_id");
 
                   return (
                     <TableRow
@@ -83,7 +93,7 @@ export function CurrentDatabaseSchema({
                         <span
                           className={`text-[12px] font-medium tracking-tight ${isPK ? "text-stone-900 font-bold" : "text-stone-800"}`}
                         >
-                          {col.column_name}
+                          {col.column_name || 'Unknown'}
                         </span>
                       </TableCell>
 
@@ -91,8 +101,9 @@ export function CurrentDatabaseSchema({
                         <div className="flex items-center justify-end gap-2">
                           <code className="text-[10px] font-bold text-blue-700 bg-blue-50/50 px-1.5 py-0.5 rounded border border-blue-100/50 uppercase tracking-tighter">
                             {col.data_type
-                              .replace("without time zone", "")
-                              .trim()}
+                              ?.replace("without time zone", "")
+                              ?.replace("with time zone", "")
+                              ?.trim() || 'unknown'}
                           </code>
                           {col.is_nullable === "NO" && (
                             <Lock className="h-3 w-3 text-stone-400 stroke-[2.5px]" />

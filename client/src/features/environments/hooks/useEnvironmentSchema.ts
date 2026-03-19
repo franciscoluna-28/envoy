@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import client from '@/api/client'
 import { ENVIRONMENT_SCHEMA_QUERY_KEYS } from '@/features/keys'
-import type { EnvironmentId } from '@/features/types'
+import type { EnvironmentId, DatabaseSchemaItem } from '@/features/types'
 
 export function useEnvironmentSchema(envId: EnvironmentId) {
   return useQuery({
@@ -10,7 +10,7 @@ export function useEnvironmentSchema(envId: EnvironmentId) {
       const response = await client.GET('/environments/{id}/schema', {
         params: { path: { id: envId } }
       })
-      return response.data
+      return response.data as unknown as DatabaseSchemaItem
     },
     enabled: !!envId
   })

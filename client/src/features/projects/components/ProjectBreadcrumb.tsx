@@ -1,4 +1,4 @@
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useLocation, useParams } from '@tanstack/react-router'
 import { useGetEnvironment } from '@/features/environments/hooks/useEnvironments'
 import {
   Breadcrumb,
@@ -8,36 +8,32 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { Home, Database, FileText } from 'lucide-react'
+import { Home, Database, FileText, ChevronRight, PlusCircle, LayoutDashboard } from 'lucide-react'
 import { useGetProject } from '../hooks/useProjects'
+import { cn } from '@/lib/utils'
+import React from 'react'
 
-interface ProjectBreadcrumbProps {
-  currentPage?: 'project' | 'environment' | 'migrations' | 'new-migration'
-  currentPageName?: string
-}
-
-export function ProjectBreadcrumb({ currentPage, currentPageName }: ProjectBreadcrumbProps) {
+export function ProjectBreadcrumb() {
+  const location = useLocation()
   const params = useParams({ strict: false })
   const { projectId, envId } = params as { projectId?: string; envId?: string }
 
-  const { data: project } = useGetProject(projectId || 'placeholder')
-  const { data: environment } = useGetEnvironment(projectId || 'placeholder', envId || 'placeholder')
+  const { data: project, isLoading: loadingProject } = useGetProject(projectId || '')
+  const { data: environment, isLoading: loadingEnv } = useGetEnvironment(
+    projectId || '', 
+    envId || ''
+  )
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'home':
-        return <Home className="h-3 w-3" />
-      case 'project':
-        return <Database className="h-3 w-3" />
-      case 'environment':
-        return <Database className="h-3 w-3" />
-      case 'migrations':
-        return <FileText className="h-3 w-3" />
-      case 'new-migration':
-        return <FileText className="h-3 w-3" />
-      default:
-        return null
-    }
+  const path = location.pathname
+  const isMigrationsPage = path.includes('/migrations') && !path.includes('/new')
+  const isNewMigrationPage = path.includes('/migrations/new')
+
+  const icons = {
+    home: <Home className="h-3.5 w-3.5" />,
+    project: <LayoutDashboard className="h-3.5 w-3.5" />,
+    environment: <Database className="h-3.5 w-3.5" />,
+    migrations: <FileText className="h-3.5 w-3.5" />,
+    new: <PlusCircle className="h-3.5 w-3.5" />,
   }
 
   const getBreadcrumbItems = () => {
@@ -45,35 +41,44 @@ export function ProjectBreadcrumb({ currentPage, currentPageName }: ProjectBread
       {
         label: 'Projects',
         href: '/app',
-        icon: getIcon('home'),
-        isCurrent: false,
+        icon: icons.home,
+        active: path === '/app',
       },
     ]
 
-    if (projectId && project) {
+    if (projectId) {
       items.push({
-        label: project?.name || '',
-        href: projectId ? `/app/projects/${projectId}` : '',
-        icon: getIcon('project'),
-        isCurrent: currentPage === 'project' || false,
+        label: loadingProject ? 'Loading...' : (project?.name || 'Project'),
+        href: `/app/projects/${projectId}`,
+        icon: icons.project,
+        active: path === `/app/projects/${projectId}`,
       })
     }
 
-    if (envId && environment && projectId) {
+    if (envId && projectId) {
       items.push({
-        label: environment.name || '',
+        label: loadingEnv ? 'Loading...' : (environment?.name || 'Environment'),
         href: `/app/projects/${projectId}/environments/${envId}`,
-        icon: getIcon('environment'),
-        isCurrent: currentPage === 'environment' || false,
+        icon: icons.environment,
+        active: path === `/app/projects/${projectId}/environments/${envId}`,
       })
     }
 
-    if (currentPageName) {
+    if (isMigrationsPage) {
       items.push({
-        label: currentPageName,
+        label: 'Migrations',
+        href: `/app/projects/${projectId}/environments/${envId}`,
+        icon: icons.migrations,
+        active: true,
+      })
+    }
+
+    if (isNewMigrationPage) {
+      items.push({
+        label: 'New Migration',
         href: '',
-        icon: getIcon(currentPage?.toLowerCase() || ''),
-        isCurrent: true,
+        icon: icons.new,
+        active: true,
       })
     }
 
@@ -83,32 +88,39 @@ export function ProjectBreadcrumb({ currentPage, currentPageName }: ProjectBread
   const breadcrumbItems = getBreadcrumbItems()
 
   return (
-    <Breadcrumb className="text-xs">
-      <BreadcrumbList>
+    <Breadcrumb className="text-[11px] font-medium tracking-tight">
+      <BreadcrumbList className="gap-1 sm:gap-1">
         {breadcrumbItems.map((item, index) => (
-          <div key={item.label} className="flex items-center gap-1.5">
+          <React.Fragment key={`${item.label}-${index}`}>
             <BreadcrumbItem>
-              {item.isCurrent ? (
-                <BreadcrumbPage className="flex items-center gap-1.5 text-black font-medium">
+              {item.active ? (
+                <BreadcrumbPage 
+                  className={cn(
+                    "flex items-center gap-2 px-2 py-1 rounded-md transition-all",
+                    "text-stone-900 font-medium!"
+                  )}
+                >
                   {item.icon}
-                  {item.label}
+                  <span className="truncate max-w-[150px]">{item.label}</span>
                 </BreadcrumbPage>
               ) : (
                 <BreadcrumbLink 
                   asChild
-                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-2 font-normal px-2 py-1 rounded-md text-stone-500 hover:text-stone-900 hover:bg-stone-100/50 transition-colors"
                 >
                   <Link to={item.href}>
                     {item.icon}
-                    {item.label}
+                    <span className="truncate max-w-[150px]">{item.label}</span>
                   </Link>
                 </BreadcrumbLink>
               )}
             </BreadcrumbItem>
             {index < breadcrumbItems.length - 1 && (
-              <BreadcrumbSeparator />
+              <BreadcrumbSeparator className="opacity-40">
+                <ChevronRight className="h-3 w-3" />
+              </BreadcrumbSeparator>
             )}
-          </div>
+          </React.Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>

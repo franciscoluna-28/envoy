@@ -151,7 +151,7 @@ function RouteComponent() {
         </div>
       </header>
 
-      <main className="flex-1 py-8 space-y-12">
+      <div className="flex-1 py-8 space-y-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
@@ -254,7 +254,7 @@ function RouteComponent() {
                                 <PopoverTrigger asChild>
                                   <Button
                                     variant="ghost"
-                                    className="h-6 px-2 text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50/50 hover:bg-red-100 hover:text-red-700 transition-all rounded-md border border-red-100/50 ml-1"
+                                    className="h-6 px-2 text-xs font-medium text-red-500 bg-red-50/50 hover:bg-red-100 hover:text-red-700 transition-all rounded-md border border-red-100/50 ml-1"
                                   >
                                     View Logs
                                   </Button>
@@ -277,7 +277,7 @@ function RouteComponent() {
                               </Popover>
                             )}
                           </div>
-                          <div className="text-[10px] text-stone-400 uppercase font-bold tracking-widest mt-0.5">
+                          <div className="text-xs text-stone-400 mt-0.5">
                             {m.description || "System Migration"}
                           </div>
                         </TableCell>
@@ -306,7 +306,7 @@ function RouteComponent() {
             </Table>
           </div>
         </div>
-      </main>
+      </div>
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-[95vw] lg:max-w-6xl h-[85vh] flex flex-col p-0 overflow-hidden border-stone-200 rounded-3xl shadow-2xl">
           <DialogHeader className="p-6 border-b bg-white/80 backdrop-blur-md sticky top-0 z-20">
@@ -325,7 +325,7 @@ function RouteComponent() {
           <div className="flex-1 overflow-y-auto p-0 relative group">
             <div className="absolute inset-0">
               <CurrentDatabaseSchema
-                schema={environmentSchema || {}}
+                schema={environmentSchema || []}
                 isLoading={isLoadingEnvironmentSchema}
               />
             </div>

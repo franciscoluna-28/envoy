@@ -53,18 +53,13 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col h-full bg-background text-foreground antialiased">
-           {" "}
       <div className="flex justify-between items-center py-6">
-               {" "}
-        <h1 className="text-xl font-bold tracking-tight">New Migration</h1>     
-          <div className="flex flex-col gap-2">        </div>     {" "}
+        <h1 className="text-xl font-bold tracking-tight">New Migration</h1>
       </div>
-           {" "}
+
       <div className="flex-1 grid grid-cols-12 gap-6">
-                     {" "}
         <div className="col-span-8 flex flex-col h-[calc(100vh-180px)]">
-           {" "}
-          <div className="flex flex-col h-full rounded-lg border shadow-sm overflow-hidden bg-background space-y-0! py-0! ">
+          <div className="flex flex-col h-full rounded-lg border shadow-sm overflow-hidden bg-background">
             <div className="bg-zinc-50/80 border-b px-3 py-2 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
                 <div className="flex gap-1.5">
@@ -86,7 +81,6 @@ function RouteComponent() {
                 {sqlValue.split("-->").length} Statements
               </Badge>
             </div>
-
             <div className="flex-1 min-h-[300px] relative">
               <div className="absolute inset-0">
                 <SQLEditor value={sqlValue} onChange={setSqlValue} />
@@ -95,15 +89,14 @@ function RouteComponent() {
             <div className="px-3 py-1.5 bg-zinc-50/50 border-t flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3 text-[10px] text-zinc-400 font-mono">
                 <span className="flex items-center gap-1">
-                  <span className="text-zinc-300">L:</span>{" "}
+                  <span className="text-zinc-300">L:</span>
                   {sqlValue.split("\n").length}
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="text-zinc-300">S:</span>{" "}
+                  <span className="text-zinc-300">S:</span>
                   {(new Blob([sqlValue]).size / 1024).toFixed(2)} KB
                 </span>
               </div>
-
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -118,54 +111,90 @@ function RouteComponent() {
             </div>
           </div>
         </div>
-               {" "}
-        <aside className="col-span-4 space-y-4">
-                             {" "}
-          <div className="space-y-4">
-                       {" "}
-            <div className="grid gap-1.5">
-                            <Label>Migration Name</Label>             {" "}
-              <Input
-                className="text-sm"
-                placeholder="add_performance_indexes"
-                value={migrationName}
-                onChange={(e) => setMigrationName(e.target.value)}
-              />
-                         {" "}
+
+        <aside className="col-span-4 flex flex-col space-y-4">
+          <Card className="p-4 border">
+           
+            <div className="space-y-3">
+              <div className="grid gap-1.5">
+                <Label className="text-xs">Migration Name</Label>
+                <Input
+                  className="text-sm"
+                  placeholder="add_performance_indexes"
+                  value={migrationName}
+                  onChange={(e) => setMigrationName(e.target.value)}
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs">Description</Label>
+                <Textarea
+                  className="text-sm min-h-[80px]"
+                  placeholder="Adding composite index to optimize feed query..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
             </div>
-                       {" "}
-            <div className="grid gap-1.5">
-                            <Label>Description</Label>             {" "}
-              <Textarea
-                className="text-sm min-h-[80px]"
-                placeholder="Adding composite index to optimize feed query..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-                         {" "}
+          </Card>
+
+          <Card className="p-4 border">
+         
+            <div className="space-y-3">
+              <Button
+                className="w-full text-sm"
+                onClick={() => {
+                  if (!sqlValue.trim()) {
+                    toast.error("Please enter SQL content");
+                    return;
+                  }
+                  previewSchema.mutate({ envId, sqlContent: sqlValue });
+                }}
+                disabled={previewSchema.isPending || !sqlValue.trim()}
+              >
+                {previewSchema.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Preview Schema Changes
+              </Button>
+
+              <div className="flex items-center justify-between p-3 rounded border border-dashed bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => setPermissionTestEnabled(!permissionTestEnabled)}
+              >
+                <div className="space-y-0.5">
+                  <p className="text-xs font-semibold">Permission Test</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Test against least privilege users
+                  </p>
+                </div>
+                <Switch
+                  checked={permissionTestEnabled}
+                  onCheckedChange={setPermissionTestEnabled}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+
+              {permissionTestEnabled && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => {
+                    validateConnection.mutate(envId);
+                  }}
+                  disabled={validateConnection.isPending}
+                >
+                  {validateConnection.isPending && (
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  )}
+                  Validate Connection
+                </Button>
+              )}
             </div>
-                     {" "}
-          </div>
-                   {" "}
-          <Button
-            className="w-full"
-            onClick={() => {
-              if (!sqlValue.trim()) {
-                toast.error("Please enter SQL content");
-                return;
-              }
-              previewSchema.mutate({ envId, sqlContent: sqlValue });
-            }}
-            disabled={previewSchema.isPending || !sqlValue.trim()}
-          >
-                       {" "}
-            {previewSchema.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-                        Preview Schema Changes        {" "}
-          </Button>
-                   {" "}
-          <Card className="p-4 bg-muted/30 border-dashed border-red-500/20">
+          </Card>
+
+          {/* Results Section - Simulation Output */}
+          <Card className="p-4 bg-muted/30 border-dashed flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Simulation Results
@@ -181,7 +210,7 @@ function RouteComponent() {
               )}
             </div>
 
-            <ScrollArea className="h-72 w-full rounded-md">
+            <ScrollArea className="flex-1 w-full rounded-md">
               <div className="space-y-2 pr-4">
                 {previewSchema.error && (
                   <div className="mb-4 space-y-2">
@@ -231,47 +260,10 @@ function RouteComponent() {
               </div>
             </ScrollArea>
           </Card>
-                   {" "}
-          <Card className="p-4">
-                       {" "}
-            <div className="flex items-center justify-between mb-4">
-                           {" "}
-              <div className="space-y-0.5">
-                               {" "}
-                <p className="text-xs font-semibold">Permission Test</p>       
-                       {" "}
-                <p className="text-[10px] text-muted-foreground">
-                  Test against least privilege users
-                </p>
-                             {" "}
-              </div>
-                           {" "}
-              <Switch
-                checked={permissionTestEnabled}
-                onCheckedChange={setPermissionTestEnabled}
-              />
-                         {" "}
-            </div>
-                       {" "}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full text-xs"
-              onClick={() => {
-                validateConnection.mutate(envId);
-              }}
-              disabled={validateConnection.isPending}
-            >
-                           {" "}
-              {validateConnection.isPending && (
-                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-              )}
-                            Validate Connection            {" "}
-            </Button>
-                     {" "}
-          </Card>
-                   {" "}
+
+          {/* Execute Section - Final Action */}
           <Button
+            size="lg"
             className="w-full"
             onClick={() => {
               if (!migrationName.trim()) {
@@ -301,17 +293,13 @@ function RouteComponent() {
               !sqlValue.trim()
             }
           >
-                       {" "}
             {runMigration.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-                        Apply Migration          {" "}
+            Apply Migration
           </Button>
-                 {" "}
         </aside>
-             {" "}
       </div>
-         {" "}
     </div>
   );
 }
