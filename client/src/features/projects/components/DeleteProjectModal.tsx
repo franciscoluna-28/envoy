@@ -1,9 +1,10 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useDeleteProject } from '../hooks/useProjects'
+import type { Project } from '@/features/types'
 
 interface DeleteProjectModalProps {
-  project: { id?: string; name?: string }
+  project: Pick<Project, 'id' | 'name'>
   onDeleted?: () => void
   open?: boolean
   onOpenChange?: (open: boolean) => void

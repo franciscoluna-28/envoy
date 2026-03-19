@@ -1,6 +1,5 @@
 import { Link, useParams } from '@tanstack/react-router'
-import { useGetProject } from '@/features/projects'
-import { useGetEnvironment } from '@/features/projects/hooks/useEnvironments'
+import { useGetEnvironment } from '@/features/environments/hooks/useEnvironments'
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -10,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Home, Database, FileText } from 'lucide-react'
+import { useGetProject } from '../hooks/useProjects'
 
 interface ProjectBreadcrumbProps {
   currentPage?: 'project' | 'environment' | 'migrations' | 'new-migration'
@@ -20,7 +20,6 @@ export function ProjectBreadcrumb({ currentPage, currentPageName }: ProjectBread
   const params = useParams({ strict: false })
   const { projectId, envId } = params as { projectId?: string; envId?: string }
 
-  // Always call hooks, but handle undefined cases
   const { data: project } = useGetProject(projectId || 'placeholder')
   const { data: environment } = useGetEnvironment(projectId || 'placeholder', envId || 'placeholder')
 
@@ -62,7 +61,7 @@ export function ProjectBreadcrumb({ currentPage, currentPageName }: ProjectBread
 
     if (envId && environment && projectId) {
       items.push({
-        label: environment.name,
+        label: environment.name || '',
         href: `/app/projects/${projectId}/environments/${envId}`,
         icon: getIcon('environment'),
         isCurrent: currentPage === 'environment' || false,

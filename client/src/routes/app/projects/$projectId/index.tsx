@@ -1,13 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  useGetProject,
-  useGetEnvironments,
-  EnvironmentList,
-  CreateEnvironmentModal,
-} from "@/features/projects";
+import { CreateEnvironmentModal } from "@/features/environments/components/CreateEnvironmentModal";
+import { EnvironmentList } from "@/features/environments/components/EnvironmentList";
+import { useGetEnvironments } from "@/features/environments/hooks/useEnvironments";
+import { useGetProject } from "@/features/projects/hooks/useProjects";
+import { LoadingState } from "@/components/shared/LoadingState";
 
 export const Route = createFileRoute("/app/projects/$projectId/")({
   component: RouteComponent,
@@ -23,14 +21,7 @@ function RouteComponent() {
     useGetEnvironments(projectId);
 
   if (projectsLoading || envsLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <Spinner className="w-8 h-8 text-blue-600" />
-        <p className="text-xs text-stone-400 animate-pulse">
-          Loading infrastructure resources...
-        </p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (

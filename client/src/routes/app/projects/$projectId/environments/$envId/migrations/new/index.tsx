@@ -16,15 +16,17 @@ import { Label } from "@/components/ui/label";
 import { SQLEditor } from "@/features/environments/components/SQLEditor";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
-import { useGetEnvironment } from "@/features/projects/hooks/useEnvironments";
+import { useGetEnvironment } from "@/features/environments/hooks/useEnvironments";
 import { useGetProject } from "@/features/projects/hooks/useProjects";
 import {
   usePreviewSchemaChanges,
   useRunMigration,
   useValidateEnvironmentConnection,
-} from "@/features/projects/hooks/useMigrations";
+} from "@/features/environments/hooks/useMigrations";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { LoadingState } from "@/components/shared/LoadingState";
+import type { PreviewError } from "@/features/types";
 
 export const Route = createFileRoute(
   "/app/projects/$projectId/environments/$envId/migrations/new/",
@@ -46,15 +48,7 @@ function RouteComponent() {
   const isLoading = projectLoading || envLoading;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-                <Loader2 className="h-8 w-8 animate-spin" />       {" "}
-        <span className="ml-2 text-muted-foreground">
-          Loading environment...
-        </span>
-             {" "}
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
@@ -195,11 +189,11 @@ function RouteComponent() {
                       <Terminal className="h-3 w-3" />
                       Simulation Error
                     </div>
-                    {previewSchema.error.errors?.map(
+                    {(previewSchema.error as PreviewError).errors?.map(
                       (err: string, i: number) => (
                         <div
                           key={i}
-                          className="p-2 rounded bg-red-50 border border-red-100 font-mono text-[10px] text-red-800 break-words"
+                          className="p-2 rounded bg-red-50 border border-red-100 font-mono text-[10px] text-red-800 wrap-break-word"
                         >
                           {err}
                         </div>

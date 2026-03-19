@@ -1,14 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Spinner } from '@/components/ui/spinner'
-import { 
-  ProjectCard, 
-  CreateProjectModal,
-  UpdateProjectModal,
-  DeleteProjectModal,
-  useGetAllProjects
-} from '@/features/projects'
 import { Badge } from '@/components/ui/badge'
+import { CreateProjectModal } from '@/features/projects/components/CreateProjectModal'
+import { DeleteProjectModal } from '@/features/projects/components/DeleteProjectModal'
+import { ProjectCard } from '@/features/projects/components/ProjectCard'
+import { UpdateProjectModal } from '@/features/projects/components/UpdateProjectModal'
+import { useGetAllProjects } from '@/features/projects/hooks/useProjects'
+import { LoadingState } from '@/components/shared/LoadingState'
 
 export const Route = createFileRoute('/app/')({
   component: RouteComponent
@@ -24,12 +22,7 @@ function RouteComponent() {
   const currentDeleteProject = projects?.find(p => p.id === deleteDialogOpen)
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <Spinner className="w-8 h-8 text-blue-600" />
-        <p className="text-xs text-stone-400 animate-pulse">Polling infrastructure data...</p>
-      </div>
-    )
+    return <LoadingState />;
   }
 
   return (

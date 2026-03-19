@@ -9,6 +9,14 @@ type Props = {
 export function SQLEditor({ value, onChange }: Props) {
   return (
     <div className="border border-stone-200 rounded-none h-full w-full flex flex-col overflow-hidden bg-white">
+      <style>{`
+        .custom-sql-editor .cm-editor {
+          height: 100% !important;
+        }
+        .custom-sql-editor .cm-scroller {
+          overflow: auto !important;
+        }
+      `}</style>
       <CodeMirror
         value={value}
         height="100%" 
@@ -26,15 +34,6 @@ export function SQLEditor({ value, onChange }: Props) {
         }}
         className="text-sm font-mono flex-1 overflow-auto custom-sql-editor"
       />
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .custom-sql-editor .cm-editor {
-          height: 100% !important;
-        }
-        .custom-sql-editor .cm-scroller {
-          overflow: auto !important;
-        }
-      `}} />
     </div>
   );
 }

@@ -10,7 +10,6 @@ import {
   Clock,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
@@ -28,20 +27,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-import {
-  CurrentDatabaseSchema,
-  useEnvironmentSchema,
-  useGetProject,
-} from "@/features/projects";
-import { useGetEnvironment } from "@/features/projects/hooks/useEnvironments";
-import { useGetEnvironmentMigrations } from "@/features/projects/hooks/useMigrations";
+import { useGetEnvironment } from "@/features/environments/hooks/useEnvironments";
+import { useGetEnvironmentMigrations } from "@/features/environments/hooks/useMigrations";
 import { toast } from "sonner";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { CurrentDatabaseSchema } from "@/features/environments/components/CurrentEnvironmentSchema";
+import { useEnvironmentSchema } from "@/features/environments/hooks/useEnvironmentSchema";
+import { useGetProject } from "@/features/projects/hooks/useProjects";
+import { LoadingState } from "@/components/shared/LoadingState";
 
 export const Route = createFileRoute(
   "/app/projects/$projectId/environments/$envId/",
@@ -99,7 +96,7 @@ function RouteComponent() {
   const { projectId, envId } = params;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data: projectData, isPending: isLoadingProject } =
+  const { isPending: isLoadingProject } =
     useGetProject(projectId);
   const { data: environmentData, isPending: isLoadingEnvironment } =
     useGetEnvironment(projectId, envId);
@@ -109,14 +106,7 @@ function RouteComponent() {
     useGetEnvironmentMigrations(envId);
 
   if (isLoadingProject || isLoadingEnvironment) {
-    return (
-      <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
-        <Spinner className="h-8 w-8 text-blue-600" />
-        <p className="text-xs text-stone-400 font-medium animate-pulse uppercase tracking-widest">
-          Polling Node Infrastructure...
-        </p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
@@ -335,7 +325,7 @@ function RouteComponent() {
           <div className="flex-1 overflow-y-auto p-0 relative group">
             <div className="absolute inset-0">
               <CurrentDatabaseSchema
-                schema={environmentSchema || []}
+                schema={environmentSchema || {}}
                 isLoading={isLoadingEnvironmentSchema}
               />
             </div>

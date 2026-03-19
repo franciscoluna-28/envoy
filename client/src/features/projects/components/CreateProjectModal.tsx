@@ -8,10 +8,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useCreateProject } from '../hooks/useProjects'
+import { createProjectSchema } from '@/features/schemas'
 
-const createProjectSchema = z.object({
-  name: z.string().min(1, 'Project name is required').max(100, 'Project name must be less than 100 characters')
-})
 
 type CreateProjectForm = z.infer<typeof createProjectSchema>
 

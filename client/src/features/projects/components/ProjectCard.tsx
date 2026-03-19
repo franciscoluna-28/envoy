@@ -10,13 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import type { Project } from "@/features/types";
 
 interface ProjectCardProps {
-  project: {
-    id?: string;
-    name?: string;
-    created_at?: string;
-  };
+  project: Project
   onUpdate?: () => void;
   onDelete?: () => void;
 }

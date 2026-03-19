@@ -6,15 +6,13 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useUpdateProject } from '../hooks/useProjects'
-
-const updateProjectSchema = z.object({
-  name: z.string().min(1, 'Project name is required').max(100, 'Project name must be less than 100 characters')
-})
+import type { Project } from '@/features/types'
+import { updateProjectSchema } from '@/features/schemas'
 
 type UpdateProjectForm = z.infer<typeof updateProjectSchema>
 
 interface UpdateProjectModalProps {
-  project: { id?: string; name?: string }
+  project: Pick<Project, 'id' | 'name'>
   onUpdated?: () => void
   open?: boolean
   onOpenChange?: (open: boolean) => void
