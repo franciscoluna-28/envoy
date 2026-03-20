@@ -126,14 +126,6 @@ export function useRunMigration() {
 
       return response.data
     },
-    onSuccess: () => {
-      toast.success("Environment connection validated successfully!")
-    },
-    onError: (error: any) => {
-      const errorMessage = error.message || 'Failed to validate environment connection'
-      toast.error(errorMessage)
-      console.error('Validation error:', error)
-    }
   })
 }
 

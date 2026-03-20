@@ -1,5 +1,6 @@
 import type { Environment } from "@/features/types";
 import { Database, Server } from "lucide-react";
+import { ConnectionStatus } from "../ConnectionStatus";
 
 type Props = {
   environmentData: Environment;
@@ -10,14 +11,9 @@ export function EnvironmentMetrics({ environmentData }: Props) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {environmentData.id && <ConnectionStatus environmentId={environmentData.id} />}
+        
         {[
-          {
-            label: "Network Status",
-            value: "Connected",
-            icon: (
-              <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            ),
-          },
           {
             label: "Node Type",
             value: environmentData?.type || "Development",
@@ -40,7 +36,7 @@ export function EnvironmentMetrics({ environmentData }: Props) {
             </span>
             <div className="flex items-center gap-2">
               {stat.icon}
-              <span className="text-sm font-medium text-stone-900 capitalize tracking-tight">
+              <span className="text-sm font-medium capitalize tracking-tight text-stone-900">
                 {stat.value}
               </span>
             </div>

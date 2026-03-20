@@ -79,33 +79,26 @@ function RouteComponent() {
           </div>
         </div>
       </header>
-   <div className="flex-1 py-8 space-y-12">
-      <EnvironmentMetrics
-        environmentData={environmentData || {}}
-        totalMigrations={migrations?.length || 0}
-      />
+      <div className="flex-1 py-8 space-y-12">
+        <EnvironmentMetrics
+          environmentData={environmentData || {}}
+          totalMigrations={migrations?.length || 0}
+        />
 
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold tracking-tight text-stone-900">
               Migration History
             </h3>
 
-          <Badge
-            variant="outline"
-          >
-            {migrations?.length || 0} Total
-          </Badge>
+            <Badge variant="outline">{migrations?.length || 0} Total</Badge>
+          </div>
+          <EnvironmentMigrationsTable
+            migrations={migrations || []}
+            isLoading={isLoadingMigrations}
+          />
         </div>
-      <EnvironmentMigrationsTable
-        migrations={migrations || []}
-        isLoading={isLoadingMigrations}
-      />
       </div>
-
-    
-</div>
 
       <DisplayEnvironmentSchemaModal
         onClose={() => {
@@ -117,7 +110,6 @@ function RouteComponent() {
         environmentSchema={environmentSchema || []}
         isLoadingEnvironmentSchema={isLoadingEnvironmentSchema}
       />
-
     </div>
   );
 }
