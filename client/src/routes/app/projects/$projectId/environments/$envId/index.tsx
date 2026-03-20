@@ -12,11 +12,13 @@ import { EnvironmentMigrationsTable } from "@/features/environments/components/E
 import { DisplayEnvironmentSchemaModal } from "@/features/environments/components/DisplayEnvironmentSchemaModal";
 import { EnvironmentMetrics } from "@/features/environments/components/EnvironmentMetrics";
 import { Badge } from "@/components/ui/badge";
+import { requireAuth } from "@/utils/guard";
 
 export const Route = createFileRoute(
   "/app/projects/$projectId/environments/$envId/",
 )({
   component: RouteComponent,
+  beforeLoad: requireAuth,
 });
 
 function RouteComponent() {

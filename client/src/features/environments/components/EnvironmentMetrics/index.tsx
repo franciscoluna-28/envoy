@@ -1,16 +1,12 @@
-import { Badge } from "@/components/ui/badge";
 import type { Environment } from "@/features/types";
-import { Database, Server, Clock } from "lucide-react";
+import { Database, Server } from "lucide-react";
 
 type Props = {
   environmentData: Environment;
   totalMigrations: number;
 };
 
-export function EnvironmentMetrics({
-  environmentData,
-  totalMigrations = 0,
-}: Props) {
+export function EnvironmentMetrics({ environmentData }: Props) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -18,7 +14,7 @@ export function EnvironmentMetrics({
           {
             label: "Network Status",
             value: "Connected",
-            icon: ( 
+            icon: (
               <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
             ),
           },
@@ -51,7 +47,6 @@ export function EnvironmentMetrics({
           </div>
         ))}
       </div>
-      
     </>
   );
 }

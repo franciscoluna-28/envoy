@@ -33,11 +33,13 @@ import { LoadingState } from "@/components/shared/LoadingState";
 import type { PreviewError } from "@/features/types";
 import { PermissionResultsModal } from "@/features/environments/components/PermissionResultsModal";
 import { SimulationResultsModal } from "@/features/environments/components/SimulationResultsModal";
+import { requireAuth } from "@/utils/guard";
 
 export const Route = createFileRoute(
   "/app/projects/$projectId/environments/$envId/migrations/new/",
 )({
   component: RouteComponent,
+  beforeLoad: requireAuth
 });
 
 function RouteComponent() {

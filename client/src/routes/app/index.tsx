@@ -9,9 +9,11 @@ import { useGetAllProjects } from '@/features/projects/hooks/useProjects'
 import { LoadingState } from '@/components/shared/LoadingState'
 import { EmptyProjectsState } from '@/features/projects/components/EmptyProjectsState'
 import { SystemOperationalBadge } from '@/features/projects/components/SystemOperationalBadge'
+import { requireAuth } from '@/utils/guard'
 
 export const Route = createFileRoute('/app/')({
-  component: RouteComponent
+  component: RouteComponent,
+  beforeLoad: requireAuth,
 })
 
 function RouteComponent() {

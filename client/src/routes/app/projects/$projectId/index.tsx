@@ -7,9 +7,11 @@ import { useGetEnvironments } from "@/features/environments/hooks/useEnvironment
 import { useGetProject } from "@/features/projects/hooks/useProjects";
 import { LoadingState } from "@/components/shared/LoadingState";
 import { SystemOperationalBadge } from "@/features/projects/components/SystemOperationalBadge";
+import { requireAuth } from "@/utils/guard";
 
 export const Route = createFileRoute("/app/projects/$projectId/")({
   component: RouteComponent,
+  beforeLoad: requireAuth,
 });
 
 function RouteComponent() {
