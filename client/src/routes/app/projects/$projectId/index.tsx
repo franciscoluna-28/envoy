@@ -6,6 +6,7 @@ import { EnvironmentList } from "@/features/environments/components/EnvironmentL
 import { useGetEnvironments } from "@/features/environments/hooks/useEnvironments";
 import { useGetProject } from "@/features/projects/hooks/useProjects";
 import { LoadingState } from "@/components/shared/LoadingState";
+import { SystemOperationalBadge } from "@/features/projects/components/SystemOperationalBadge";
 
 export const Route = createFileRoute("/app/projects/$projectId/")({
   component: RouteComponent,
@@ -29,20 +30,17 @@ function RouteComponent() {
       <header className="flex items-center justify-between py-6 border-b">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold tracking-tighter text-stone-900 uppercase">
+            <h2 className="text-xl font-bold tracking-tighter text-stone-900">
               {project?.name ?? "Unknown Project"}
             </h2>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-green-600 uppercase tracking-tight">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              System Operational
-            </div>
+           <SystemOperationalBadge />
             <span className="text-stone-300 text-[10px]">•</span>
             <Badge
               variant="outline"
-              className="text-[10px] border-stone-200 text-stone-500 h-5 px-1.5 font-medium uppercase"
+              
             >
               {environments?.length || 0} Environment
               {environments?.length !== 1 ? "s" : ""}

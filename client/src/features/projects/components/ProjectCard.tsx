@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Project } from "@/features/types";
+import { formatDate } from "@/utils/date";
 
 interface ProjectCardProps {
   project: Project
@@ -31,21 +32,18 @@ export function ProjectCard({ project, onUpdate, onDelete }: ProjectCardProps) {
             <div className="flex items-center gap-2">
               <Badge
                 variant="secondary"
-                className="bg-stone-100 text-[10px] px-1.5 py-0 h-4 font-bold border-none text-stone-500 uppercase tracking-wider"
+              
               >
-                POSTGRES
+                PostgreSQL
               </Badge>
 
               <span className="text-stone-300 text-[10px]">•</span>
 
-              <div className="flex items-center gap-1.5 text-[11px] text-stone-400 font-medium">
-                <Calendar className="w-3 h-3 text-stone-300" />
+              <div className="flex items-center gap-1 text-xs">
+                <Calendar className="w-3 h-3 text-muted-foreground" />
                 <span>
                   {project.created_at
-                    ? new Date(project.created_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })
+                    ? formatDate(project.created_at)
                     : "Just now"}
                 </span>
               </div>

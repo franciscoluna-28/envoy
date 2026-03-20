@@ -134,6 +134,7 @@ export function CreateEnvironmentModal({
                   <Button
                     key={option}
                     type="button"
+                    size="sm"
                     onClick={() =>
                       form.setValue(
                         "type",
@@ -141,7 +142,7 @@ export function CreateEnvironmentModal({
                       )
                     }
                     variant={
-                      form.watch("type") === option ? "secondary" : "outline"
+                      form.watch("type") === option ? "selected" : "unselected"
                     }
                   >
                     {option.charAt(0).toUpperCase() + option.slice(1)}

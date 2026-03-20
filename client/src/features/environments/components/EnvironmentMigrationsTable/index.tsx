@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { PreviewSQLModal } from "../PreviewSQLModal";
+import { EmptyMigrationsState } from "../EmptyMigrationsState";
 
 type Props = {
   migrations: EnvironmentMigration[];
@@ -31,44 +32,38 @@ export function EnvironmentMigrationsTable({ migrations, isLoading, onViewResult
   const [previewSql, setPreviewSql] = useState("");
 
   return (
-    <div className="rounded-2xl border overflow-hidden shadow-sm bg-background">
-      <PreviewSQLModal open={previewSqlOpen} onOpenChange={setPreviewSqlOpen} sql={previewSql} name="Preview SQL" />
-      <Table>
-        <TableHeader className="bg-stone-50/50">
-          <TableRow className="hover:bg-transparent border-stone-100">
-            <TableHead className="text-[10px] font-bold uppercase tracking-widest text-stone-400 py-4 pl-6">
-              Node Metadata
-            </TableHead>
-            <TableHead className="text-[10px] font-bold uppercase tracking-widest text-stone-400 py-4">
-              View SQL
-            </TableHead>
-            <TableHead className="text-[10px] font-bold uppercase tracking-widest text-stone-400 py-4">
-              Status
-            </TableHead>
-            <TableHead className="text-[10px] font-bold uppercase tracking-widest text-stone-400 py-4 text-right pr-8">
-              Performance / Time
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
-            <TableRow>
-              <TableCell colSpan={3} className="py-12 text-center">
-                <Spinner className="mx-auto h-4 w-4 text-stone-300" />
-              </TableCell>
+    <div className="rounded-2xl border overflow-hidden shadow-sm bg-background mt-0">
+      {migrations?.length === 0 && !isLoading ? (
+       <EmptyMigrationsState />
+      ) : (
+        <>
+          <PreviewSQLModal open={previewSqlOpen} onOpenChange={setPreviewSqlOpen} sql={previewSql} name={"Preview SQL"} />
+        <Table>
+          <TableHeader className="bg-muted-foreground/5">
+            <TableRow className="hover:bg-transparent border-stone-100">
+              <TableHead className="text-xs font-medium text-black py-4 pl-6">
+                Node Metadata
+              </TableHead>
+              <TableHead className="text-xs font-medium text-black py-4">
+                View SQL
+              </TableHead>
+              <TableHead className="text-xs font-medium text-black py-4">
+                Status
+              </TableHead>
+              <TableHead className="text-xs font-medium text-black py-4 text-right pr-8">
+                Performance / Time
+              </TableHead>
             </TableRow>
-          ) : migrations?.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={3}
-                className="py-12 text-center text-[11px] text-stone-400 font-medium"
-              >
-                No migrations found
-              </TableCell>
-            </TableRow>
-          ) : (
-            migrations?.map((m) => (
-              <>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="py-10">
+                  <Spinner />
+                </TableCell>
+              </TableRow>
+            ) : (
+              migrations?.map((m) => (
                 <TableRow
                   key={m.id}
                   className="border-stone-50 transition-colors group hover:bg-stone-50/30"
@@ -151,11 +146,15 @@ export function EnvironmentMigrationsTable({ migrations, isLoading, onViewResult
                     </div>
                   </TableCell>
                 </TableRow>
-              </>
-            ))
-          )}
-        </TableBody>
-      </Table>
+              ))
+            )}
+          </TableBody>
+        </Table>
+    </>
+      )}
+
     </div>
+
   );
 }
+

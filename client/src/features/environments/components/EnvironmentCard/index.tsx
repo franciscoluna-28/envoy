@@ -1,9 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Database } from 'lucide-react'
+import { Calendar, Database } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Link } from '@tanstack/react-router'
 import type { Environment } from '@/features/types'
+import { formatDate } from '@/utils/date'
 
 interface EnvironmentCardProps {
   env: Environment
@@ -23,14 +24,18 @@ export function EnvironmentCard({ env }: EnvironmentCardProps) {
             <div className="flex items-center gap-2">
               <Badge 
                 variant="secondary" 
-                className="bg-stone-100 text-[10px] px-1.5 py-0 h-4 font-bold border-none text-stone-500 uppercase tracking-wider"
+                
               >
                 {env.type || 'development'}
               </Badge>
-              
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-green-600">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-                Connected
+              <span className="text-stone-300 text-[10px]">•</span>
+               <div className="flex items-center gap-1 text-xs">
+                <Calendar className="w-3 h-3 text-muted-foreground" />
+                <span>
+                  {env.created_at
+                    ? formatDate(env.created_at)
+                    : "Just now"}
+                </span>
               </div>
             </div>
           </div>

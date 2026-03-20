@@ -11,6 +11,7 @@ import { LoadingState } from "@/components/shared/LoadingState";
 import { EnvironmentMigrationsTable } from "@/features/environments/components/EnvironmentMigrationsTable";
 import { DisplayEnvironmentSchemaModal } from "@/features/environments/components/DisplayEnvironmentSchemaModal";
 import { EnvironmentMetrics } from "@/features/environments/components/EnvironmentMetrics";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute(
   "/app/projects/$projectId/environments/$envId/",
@@ -40,8 +41,8 @@ function RouteComponent() {
       <header className="flex flex-col gap-4 py-6 border-b bg-stone-50/30">
         <div className="flex items-end justify-between">
           <div className="space-y-1">
-            <h1 className="text-xl font-bold tracking-tighter text-stone-900 flex items-center gap-3 uppercase">
-              <div className="p-2 bg-white border border-stone-200 rounded-xl shadow-sm">
+            <h1 className="text-xl font-bold tracking-tighter text-stone-900 flex items-center gap-3">
+              <div className="p-2 bg-background border rounded-xl">
                 <Database className="h-5 w-5 text-blue-600" />
               </div>
               {environmentData?.name}
@@ -52,7 +53,7 @@ function RouteComponent() {
                   navigator.clipboard.writeText(envId);
                   toast.success("Node ID copied to clipboard");
                 }}
-                className="text-[10px] font-bold text-stone-400 hover:text-blue-600 transition-colors uppercase tracking-tight"
+                className="text-[10px] font-medium text-muted-foreground hover:text-blue-600 transition-colors uppercase tracking-wide"
               >
                 Node ID: #{envId.slice(0, 8)}
               </button>
@@ -82,10 +83,26 @@ function RouteComponent() {
         totalMigrations={migrations?.length || 0}
       />
 
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+
+            <h3 className="text-sm font-semibold tracking-tight text-stone-900">
+              Migration History
+            </h3>
+
+          <Badge
+            variant="outline"
+          >
+            {migrations?.length || 0} Total
+          </Badge>
+        </div>
       <EnvironmentMigrationsTable
         migrations={migrations || []}
         isLoading={isLoadingMigrations}
       />
+      </div>
+
+    
 </div>
 
       <DisplayEnvironmentSchemaModal
