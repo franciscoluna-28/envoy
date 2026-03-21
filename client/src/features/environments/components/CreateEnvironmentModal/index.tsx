@@ -111,7 +111,7 @@ export function CreateEnvironmentModal({
               </FieldLabel>
               <Input
                 id="connection_string"
-                placeholder="postgresql://user:password@localhost:5432/dbname?sslmode=require"
+                placeholder="postgresql://envoy_superuser:superuser_password_123@envoy-postgres-dev:5432/envoy_dev"
                 {...form.register("connection_string")}
               />
               <FieldDescription>

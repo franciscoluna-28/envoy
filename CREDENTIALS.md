@@ -25,7 +25,7 @@ This document contains all the credentials for the PostgreSQL database setup.
   ```
 - **Connection String (Docker Internal):**
   ```
-  postgresql://envoy_superuser:superuser_password_123@postgres-dev:5432/envoy_dev
+  postgresql://envoy_superuser:superuser_password_123@envoy-postgres-dev:5432/envoy_dev
   ```
 - **PSQL Command (Development):**
   ```bash
@@ -33,7 +33,7 @@ This document contains all the credentials for the PostgreSQL database setup.
   ```
 - **PSQL Command (Docker Internal):**
   ```bash
-  docker-compose -f docker-compose.dev.yml exec postgres-dev psql -U envoy_superuser -d envoy_dev
+  docker-compose -f docker-compose.dev.yml exec envoy-postgres-dev psql -U envoy_superuser -d envoy_dev
   ```
 
 ### 2. Production User (Application User)
@@ -50,7 +50,7 @@ This document contains all the credentials for the PostgreSQL database setup.
   ```
 - **Connection String (Docker Internal):**
   ```
-  postgresql://envoy_dev_user:prod_user_password_123@postgres-dev:5432/envoy_dev
+  postgresql://envoy_dev_user:prod_user_password_123@envoy-postgres-dev:5432/envoy_dev
   ```
 - **PSQL Command (Development):**
   ```bash
@@ -58,7 +58,7 @@ This document contains all the credentials for the PostgreSQL database setup.
   ```
 - **PSQL Command (Docker Internal):**
   ```bash
-  docker-compose -f docker-compose.dev.yml exec postgres-dev psql -U envoy_dev_user -d envoy_dev
+  docker-compose -f docker-compose.dev.yml exec envoy-postgres-dev psql -U envoy_dev_user -d envoy_dev
   ```
 
 ### 3. Read-only User
@@ -74,7 +74,7 @@ This document contains all the credentials for the PostgreSQL database setup.
   ```
 - **Connection String (Docker Internal):**
   ```
-  postgresql://envoy_dev_readonly_user:readonly_user_password_456@postgres-dev:5432/envoy_dev
+  postgresql://envoy_dev_readonly_user:readonly_user_password_456@envoy-postgres-dev:5432/envoy_dev
   ```
 - **PSQL Command (Development):**
   ```bash
@@ -82,7 +82,7 @@ This document contains all the credentials for the PostgreSQL database setup.
   ```
 - **PSQL Command (Docker Internal):**
   ```bash
-  docker-compose -f docker-compose.dev.yml exec postgres-dev psql -U envoy_dev_readonly_user -d envoy_dev
+  docker-compose -f docker-compose.dev.yml exec envoy-postgres-dev psql -U envoy_dev_readonly_user -d envoy_dev
   ```
 
 ## PGAdmin Credentials
@@ -108,51 +108,51 @@ postgresql://envoy_dev_readonly_user:readonly_user_password_456@localhost:5432/e
 ### For Docker Internal (Container-to-Container)
 ```bash
 # Superuser (for migrations/admin)
-postgresql://envoy_superuser:superuser_password_123@postgres-dev:5432/envoy_dev
+postgresql://envoy_superuser:superuser_password_123@envoy-postgres-dev:5432/envoy_dev
 
 # Production User (for application)
-postgresql://envoy_dev_user:prod_user_password_123@postgres-dev:5432/envoy_dev
+postgresql://envoy_dev_user:prod_user_password_123@envoy-postgres-dev:5432/envoy_dev
 
 # Read-only User (for reporting)
-postgresql://envoy_dev_readonly_user:readonly_user_password_456@postgres-dev:5432/envoy_dev
+postgresql://envoy_dev_readonly_user:readonly_user_password_456@envoy-postgres-dev:5432/envoy_dev
 ```
 
 ## Usage Recommendations
 
 ### For Envoy Application (Development)
-Use the **Production User** credentials with localhost access:
+Use the **Production User** credentials with Docker service name:
 ```
-Database URL: postgresql://envoy_dev_user:prod_user_password_123@localhost:5432/envoy_dev
+Database URL: postgresql://envoy_dev_user:prod_user_password_123@envoy-postgres-dev:5432/envoy_dev
 ```
 
 ### For Envoy Application (Docker Compose)
 Use the **Production User** credentials with service name:
 ```
-Database URL: postgresql://envoy_dev_user:prod_user_password_123@postgres-dev:5432/envoy_dev
+Database URL: postgresql://envoy_dev_user:prod_user_password_123@envoy-postgres-dev:5432/envoy_dev
 ```
 
 ### For Database Migrations
 Use the **Superuser** credentials:
 ```
-Database URL: postgresql://envoy_superuser:superuser_password_123@localhost:5432/envoy_dev
+Database URL: postgresql://envoy_superuser:superuser_password_123@envoy-postgres-dev:5432/envoy_dev
 ```
 
 ### For Reporting/Analytics
 Use the **Read-only User** credentials:
 ```
-Database URL: postgresql://envoy_dev_readonly_user:readonly_user_password_456@localhost:5432/envoy_dev
+Database URL: postgresql://envoy_dev_readonly_user:readonly_user_password_456@envoy-postgres-dev:5432/envoy_dev
 ```
 
 ## Network Configuration
 
 ### Development Access (Ports Open)
-- **PostgreSQL:** `localhost:5432` → `postgres-dev:5432`
+- **PostgreSQL:** `localhost:5432` → `envoy-postgres-dev:5432`
 - **PGAdmin:** `localhost:5050` → `pgadmin:80`
 
 ### Production Considerations (Ports Closed)
 In production environments:
 - **Close external ports** - Only allow internal Docker network access
-- **Use service names** - `postgres-dev:5432` instead of `localhost:5432`
+- **Use service names** - `envoy-postgres-dev:5432` instead of `localhost:5432`
 - **Implement firewall rules** - Restrict database access to application containers only
 
 ### Docker Network Configuration
@@ -230,16 +230,16 @@ DB_PROD_USER_URL=postgresql://envoy_dev_user:prod_user_password_123@localhost:54
 DB_READONLY_USER_URL=postgresql://envoy_dev_readonly_user:readonly_user_password_456@localhost:5432/envoy_dev
 
 # Docker Internal Connection Strings
-DB_SUPERUSER_INTERNAL_URL=postgresql://envoy_superuser:superuser_password_123@postgres-dev:5432/envoy_dev
-DB_PROD_USER_INTERNAL_URL=postgresql://envoy_dev_user:prod_user_password_123@postgres-dev:5432/envoy_dev
-DB_READONLY_USER_INTERNAL_URL=postgresql://envoy_dev_readonly_user:readonly_user_password_456@postgres-dev:5432/envoy_dev
+DB_SUPERUSER_INTERNAL_URL=postgresql://envoy_superuser:superuser_password_123@envoy-postgres-dev:5432/envoy_dev
+DB_PROD_USER_INTERNAL_URL=postgresql://envoy_dev_user:prod_user_password_123@envoy-postgres-dev:5432/envoy_dev
+DB_READONLY_USER_INTERNAL_URL=postgresql://envoy_dev_readonly_user:readonly_user_password_456@envoy-postgres-dev:5432/envoy_dev
 ```
 
 ## Quick Reference
 
 | User | Username | Password | Dev Connection | Docker Connection | Use Case |
 |------|----------|----------|----------------|-------------------|----------|
-| Superuser | envoy_superuser | superuser_password_123 | `localhost:5432` | `postgres-dev:5432` | Migrations, Admin |
-| Production | envoy_dev_user | prod_user_password_123 | `localhost:5432` | `postgres-dev:5432` | Application |
-| Read-only | envoy_dev_readonly_user | readonly_user_password_456 | `localhost:5432` | `postgres-dev:5432` | Reporting |
+| Superuser | envoy_superuser | superuser_password_123 | `localhost:5432` | `envoy-postgres-dev:5432` | Migrations, Admin |
+| Production | envoy_dev_user | prod_user_password_123 | `localhost:5432` | `envoy-postgres-dev:5432` | Application |
+| Read-only | envoy_dev_readonly_user | readonly_user_password_456 | `localhost:5432` | `envoy-postgres-dev:5432` | Reporting |
 | PGAdmin | admin@envoy.dev | admin_password_789 | `localhost:5050` | N/A | Web UI |
