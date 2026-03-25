@@ -125,6 +125,11 @@ PORT=8080
 APP_ENV=development
 ```
 
+## Screenshots
+<img src="readme/envoy_environment_dashboard.png" alt="Envoy architecture">
+<img src="readme/envoy_migration_creation.jpeg" alt="Envoy architecture">
+
+
 ## How It Works
 
 ### Architecture
