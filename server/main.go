@@ -42,6 +42,7 @@ func main() {
 	jwtProvider := auth.NewJWTProvider(cfg.JWTSecret)
 	authHandler := auth.NewHandler(authRepo, v, jwtProvider)
 	authMiddleware := auth.AuthMiddleware(jwtProvider)
+	postgresValidator := environments.NewPostgresValidator()
 
 	projectRepo := projects.NewRepository(db)
 	projectHandler := projects.NewHandler(projectRepo, v)
@@ -50,7 +51,7 @@ func main() {
 	masterKey := []byte(cfg.EncryptionKey)
 	checksumKey := []byte(cfg.ChecksumKey)
 
-	environmentHandler := environments.NewHandler(environmentRepo, v, masterKey, checksumKey)
+	environmentHandler := environments.NewHandler(environmentRepo, v, masterKey, checksumKey, postgresValidator)
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)

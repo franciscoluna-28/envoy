@@ -11,18 +11,20 @@ import (
 )
 
 type Handler struct {
-	repo        Repository
-	validator   *validator.Validate
-	masterKey   []byte
-	checksumKey []byte
+	repo                Repository
+	validator           *validator.Validate
+	masterKey           []byte
+	checksumKey         []byte
+	connectionValidator ConnectionValidator
 }
 
-func NewHandler(repo Repository, v *validator.Validate, masterKey, checksumKey []byte) *Handler {
+func NewHandler(repo Repository, v *validator.Validate, masterKey, checksumKey []byte, connectionValidator ConnectionValidator) *Handler {
 	return &Handler{
-		repo:        repo,
-		validator:   v,
-		masterKey:   masterKey,
-		checksumKey: checksumKey,
+		repo:                repo,
+		validator:           v,
+		masterKey:           masterKey,
+		checksumKey:         checksumKey,
+		connectionValidator: &PostgresValidator{},
 	}
 }
 
@@ -50,7 +52,7 @@ func (h *Handler) CreateEnvironment(w http.ResponseWriter, r *http.Request) {
 
 	req.ProjectID = projectID
 
-	err := CreateProjectEnvironment(r.Context(), req, h.masterKey, h.repo)
+	err := CreateProjectEnvironment(r.Context(), req, h.masterKey, h.repo, h.connectionValidator)
 	if err != nil {
 		response.WriteJSON(w, http.StatusInternalServerError, response.ErrorResponse{Message: err.Error()})
 		return
