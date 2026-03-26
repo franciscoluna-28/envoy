@@ -1,91 +1,109 @@
-# Envoy | PostgreSQL Schema Management Tool
+# 🦦 Envoy — PostgreSQL Schema Management, Reimagined
 
 <p align="center">
   <img src="readme/logo.png" alt="Envoy Logo" width="160px"/>
-  <br>
-  <b>The Unified Database Control Plane for Startups.</b>
-  <br>
-  <i>Stop juggling terminals. Handle multiple environments with speed and compliance.</i>
+  <br/>
+  <b>The permission‑aware database control plane your CI/CD pipeline ignores.</b>
 </p>
+
+> **CI/CD checks your code.**  
+> **Envoy checks your permissions.**  
+> **You need both.**
+
+---
+
+## Born From Pain
+
+I was the only engineer at a startup.  
+Every Friday at 10:00 AM was migration time.  
+Every Friday at 10:15 AM was a permission failure.  
+Every Friday at 10:30 AM was frantic `pgAdmin` surgery.
+
+CI/CD didn’t care about permissions.  
+My stakeholders didn’t understand databases.  
+I was alone drowning in audit requests I couldn’t answer.
+
+So I built **Envoy**, first to survive, then to scale.  
+Now it’s yours.
 
 ---
 
 ## The Problem
 
-Managing database migrations across **Staging, QA, and Production** is a fragmented mess:
+Managing database migrations across **Staging → QA → Production** is a minefield.
 
-* **Switching .env files** manually is dangerous and error-prone
-* **Forgetting GRANT permissions** in pgAdmin causes production downtime  
-* **Audit logs** are non-existent, scattered, or hard to verify
-* **Multiple tools** required for simple database operations
+| Problem | Reality |
+|--------|---------|
+| **Switching `.env` files** | Manual, dangerous, and easy to mess up. |
+| **Forgetting GRANTs** | The classic “Permission Denied” outage. |
+| **Audit logs** | Scattered, missing, or nonexistent. |
+| **Multiple tools** | pgAdmin, psql, VS Code, CLI… pure chaos. |
 
-### Example Situation (Every Friday at 10am)
-1. Get production database credentials
-2. Replace environment variable in .env file
-3. Run migration command
-4. Verify migration was successful
-5. Try changes in production
-6. **Realize you forgot to give permissions to new tables**
-7. Go back to pgAdmin/psql to fix permissions
-8. Try again in production
-9. Repeat next week across all environments
+### The “Friday 10 AM Anti‑Pattern”
 
-## The Envoy Solution
+1. Grab production credentials (already a red flag).  
+2. Swap `.env` variables manually.  
+3. Run migrations and pray.  
+4. Realize you forgot permissions.  
+5. Patch GRANTs live while users see errors.
 
-Envoy sits between your ORM (Prisma, Gorm, Drizzle) and your infrastructure to provide:
-
-* **One Interface:** Switch environments without touching config files
-* **Permissions Audit:** Automatic GRANT verification per environment
-* **Audit History:** GitHub-style log of every query executed
-* **Security First:** Encrypted secrets and audit trails
+There’s a better way.
 
 ---
 
-### Who is this for?
+## The Envoy Solution
 
-* Founding Engineers building scalable DB processes from Day 1.
-* DevOps standardizing how teams interact with production data.
-* Solo Devs tired of manual migration PTSD.
+Envoy sits between your ORM (Prisma, Gorm, Drizzle, etc.) and your infrastructure to give you a **unified, permission‑aware control plane**.
+
+### What Envoy Gives You
+
+- **One Interface:** Switch environments without touching config files.  
+- **Permission Audits:** Automatic GRANT verification per environment; the blind spot CI/CD ignores.  
+- **Immutable Audit History:** GitHub‑style logs for every executed query.  
+- **Security First:** Encrypted secrets, strict audit trails, and zero credential juggling.
+
+---
+
+## Who Is Envoy For?
+
+- **Founding Engineers:** You’re likely to be alone. You can’t afford 3 AM permission outages.  
+- **DevOps Teams:** CI/CD deploys code, not permissions. Envoy fills the gap.  
+- **Compliance‑Heavy Startups:** SOC2, HIPAA, GDPR; you need receipts. Envoy gives them.  
+- **Solo Devs With PTSD:** If you’ve been paged for a forgotten GRANT… welcome home.
 
 ---
 
 ## Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose installed
-- Git
-
-### Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-org/envoy.git
-   cd envoy
-   ```
-
-2. **Start the development environment**
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **Access the application**
-   - **Web Interface**: http://localhost:5173 (Frontend)
-   - **API Server**: http://localhost:8080 (Backend)
-   - **Database Admin**: http://localhost:5050 (pgAdmin)
-
-That's it! Envoy is now running with both frontend and backend services.
+- Docker & Docker Compose  
+- Git  
 
 ---
 
-## Configuration
+### 1. Setup
 
-Copy the environment file and update with your values:
+```bash
+git clone https://github.com/franciscoluna-28/envoy.git
+cd envoy
+
+docker-compose up -d
+```
+### 2. Services
+| Service       | URL                                            |
+| ------------- | ---------------------------------------------- |
+| **Web Interface** | [http://localhost:5173](http://localhost:5173) |
+| **API Server**    | [http://localhost:8080](http://localhost:8080) |
+| **pgAdmin**       | [http://localhost:5050](http://localhost:5050) |
+
+## Configuration
+Copy the environment file and fill in the required keys:
 
 ```bash
 cp server/.env.example server/.env
 ```
 
-### Required Environment Variables
+## Required Environment Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
@@ -96,8 +114,9 @@ cp server/.env.example server/.env
 | `PORT` | API server port | `8080` |
 | `APP_ENV` | Environment mode | `development` |
 
-### Example `.env` File
-```env
+## Example .env File
+
+```
 DATABASE_URL=file:./data/envoy.db
 JWT_SECRET=your-jwt-secret-64-chars-ultra-secure-random-key
 ENCRYPTION_KEY=your-encryption-key-32-chars-123
@@ -106,98 +125,40 @@ PORT=8080
 APP_ENV=development
 ```
 
----
+## Screenshots
+<img src="readme/envoy_environment_dashboard.png" alt="Envoy architecture">
+<img src="readme/envoy_migration_creation.jpeg" alt="Envoy architecture">
+
 
 ## How It Works
 
 ### Architecture
-```
-[React Frontend] → [Go API] → [Target Databases]
-                    ↓
-                [SQLite Storage]
-```
-
-### Key Features
-- **Environment Management**: Add/switch between dev, staging, prod databases
-- **Migration Editor**: Write SQL with syntax highlighting
-- **Schema Preview**: See changes before applying
-- **Permission Auditing**: Automatic GRANT verification
-- **Audit Trail**: Complete history of all database operations
+<img src="readme/architecture.svg" alt="Envoy architecture">
 
 ---
 
-## Development
+### Built With
 
-### Local Development
-
-#### Backend (Go)
-```bash
-cd server
-go mod download
-go run cmd/main.go
-```
-
-#### Frontend (React)
-```bash
-cd client
-npm install
-npm run dev
-```
-
-### Project Structure
-```
-envoy/
-├── server/          # Go backend API
-├── client/          # React frontend
-├── docker-compose.yml  # Development environment
-└── readme.md        # This file
-```
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React 19, Vite, TypeScript |
+| **Backend** | Go 1.25, Gin |
+| **Databases** | PostgreSQL (target), SQLite (internal) |
+| **Infrastructure** | Docker, Docker Compose |
 
 ---
 
-## Troubleshooting
+## Let's Build Something That Won't Break at 3am
 
-### Common Issues
+I'm **Francisco Luna**. I architect backend systems for startups that want to skip the permission hell I lived through.
 
-**Database connection failed**
-```bash
-docker-compose ps postgres-dev
-docker-compose logs postgres-dev
-```
+**What I offer:**
+- Database architecture reviews
+- Backend consulting (Go, Node.js, PostgreSQL)
+- MVP development with production-ready foundations
+- Infrastructure and architecture in AWS
 
-**API not starting**
-```bash
-cat server/.env
-docker-compose logs envoy-api
-```
+**I've been the solo engineer. I've made the mistakes. Let me help you skip them.**
 
-**Port conflicts**
-```bash
-netstat -tulpn | grep :8080
-netstat -tulpn | grep :5432
-```
-
----
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-<p align="center">
-  <b>Built with ❤️ by Francisco Luna, for developers who value speed and security.</b>
-  <br>
-  <i>Stop managing databases. Start shipping features.</i>
-</p>
-
----
-
-<p align="center">
-  <b>Open for Collaborations</b>
-  <br>
-  <i>Need help with your database infrastructure? I'm available for Node.js, Golang and Postgres backend and infrastructure consulting. Want to discuss your project?</i>
-  <br>
-  <br>
-  <a href="mailto:franciscolunadev@gmail.com">Let's Talk About Your Environment</a>
-</p>
+📧 **Email:** franciscolunadev@gmail.com  
+📅 **Book a call:** [cal.com/franciscoluna](https://cal.com/franciscoluna)
