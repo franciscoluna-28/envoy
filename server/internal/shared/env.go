@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	Port          string `env:"PORT" envDefault:"8080"`
-	DatabaseURL   string `env:"DATABASE_URL,required"`
-	JWTSecret     string `env:"JWT_SECRET,required"`
-	Env           string `env:"APP_ENV" envDefault:"development"`
-	EncryptionKey string `env:"ENCRYPTION_KEY,required"`
-	ChecksumKey   string `env:"CHECKSUM_KEY,required"`
+	Port           string `env:"PORT" envDefault:"8080"`
+	DatabaseURL    string `env:"DATABASE_URL,required"`
+	JWTSecret      string `env:"JWT_SECRET,required"`
+	Env            string `env:"APP_ENV" envDefault:"development"`
+	EncryptionKey  string `env:"ENCRYPTION_KEY,required"`
+	ChecksumKey    string `env:"CHECKSUM_KEY,required"`
+	AllowedOrigins string `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:5173"`
 }
 
 func LoadConfig() *Config {

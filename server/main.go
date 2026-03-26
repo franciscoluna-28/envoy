@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	_ "newserver/docs"
 	"newserver/internal/auth"
@@ -33,7 +34,7 @@ func main() {
 
 	db, err := database.New(cfg.DatabaseURL)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
 	v := validator.New()
@@ -53,19 +54,24 @@ func main() {
 
 	environmentHandler := environments.NewHandler(environmentRepo, v, masterKey, checksumKey, postgresValidator)
 
+	// Validate CORS origins for security
+	origins := strings.Split(cfg.AllowedOrigins, ",")
+	for _, origin := range origins {
+		origin = strings.TrimSpace(origin)
+		if origin == "*" {
+			log.Fatal("CORS wildcard '*' is not allowed when AllowCredentials is true")
+		}
+	}
+
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
-		Debug:            false,
+		Debug:            cfg.Env == "development",
 	}))
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to the newborn server!"))
-	})
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -73,7 +79,11 @@ func main() {
 		w.Write([]byte(`{"status": "ok"}`))
 	})
 
-	// Swagger documentation
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		shared.WriteJSON(w, http.StatusNotFound, shared.ErrorResponse{Message: "Route not found"})
+	})
+
+	// API documentation
 	r.Get("/swagger/*", httpSwagger.Handler())
 
 	r.Route("/api", func(r chi.Router) {

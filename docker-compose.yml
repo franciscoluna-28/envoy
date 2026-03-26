@@ -9,6 +9,7 @@ services:
       - APP_ENV=development
       - ENCRYPTION_KEY=your-encryption-key-32-chars-123
       - CHECKSUM_KEY=your-checksum-key-32-chars-12345
+      - ALLOWED_ORIGINS=http://localhost:5173
     ports:
       - "8080:8080"
     volumes:
