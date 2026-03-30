@@ -144,9 +144,8 @@ export function useTestPermissionsWithPreview() {
         throw new Error((response as any).error.message || 'Failed to test permissions with preview')
       }
       
-      const results = ((response as any).data as any).data as TablePermission[]
-      console.log('Permission test with preview results:', results);
-      return results
+      const results = ((response as any).data) as TablePermission[] | null
+      return results || []
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to test permissions'
@@ -170,9 +169,8 @@ export function useTestPermissionsWithCurrentSchema() {
         throw new Error((response as any).error.message || 'Failed to test permissions with current schema')
       }
       
-      const results = ((response as any).data as any).data as TablePermission[]
-      console.log('Permission test with current schema results:', results);
-      return results
+      const results = ((response as any).data) as TablePermission[] | null
+      return results || []
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to test permissions'

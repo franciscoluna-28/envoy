@@ -11,10 +11,16 @@ import { Terminal, Copy } from "lucide-react";
 import type { TablePermission } from "@/features/types";
 import { toast } from "sonner";
 
+type ApiResponse = {
+  data: TablePermission[] | null;
+  message: string;
+  success: boolean;
+};
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  permissions: TablePermission[];
+  permissions: TablePermission[] | ApiResponse | null | undefined;
   title: string;
   databaseUser: string;
 };
@@ -26,7 +32,23 @@ export function PermissionResultsModal({
   title,
   databaseUser,
 }: Props) {
-  const hasIssues = permissions.some((p) => p.is_missing);
+  // Defensive check - ensure we always have an array
+  const safePermissions: TablePermission[] = (() => {
+    if (Array.isArray(permissions)) {
+      return permissions;
+    }
+    
+    if (permissions && typeof permissions === 'object' && 'data' in permissions) {
+      return Array.isArray(permissions.data) ? permissions.data : [];
+    }
+    
+    return [];
+  })();
+  
+  // Double-check we have an array before calling .some()
+  const hasIssues = Array.isArray(safePermissions) && safePermissions.length > 0 
+    ? safePermissions.some((p) => p.is_missing) 
+    : false;
 
   const generateGrant = (p: TablePermission) => {
     if (!p.privileges || p.privileges.length === 0)
@@ -39,7 +61,7 @@ export function PermissionResultsModal({
   };
 
   const copyAllGrants = () => {
-    const missingPermissions = permissions.filter((p) => p.is_missing);
+    const missingPermissions = safePermissions.filter((p) => p.is_missing);
     const allGrants = missingPermissions.map(generateGrant).join("\n");
 
     navigator.clipboard.writeText(allGrants);
@@ -75,58 +97,64 @@ export function PermissionResultsModal({
 
         <ScrollArea className="flex-1">
           <div className="p-6 space-y-4">
-            {permissions.map((permission, index) => (
-              <div
-                key={index}
-                className="border rounded-lg p-4 transition-colors hover:bg-accent/50"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Terminal className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-semibold">
-                      {permission.table_name}
-                    </span>
+            {safePermissions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No permissions to display</p>
+              </div>
+            ) : (
+              safePermissions.map((permission, index) => (
+                <div
+                  key={index}
+                  className="border rounded-lg p-4 transition-colors hover:bg-accent/50"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Terminal className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold">
+                        {permission.table_name}
+                      </span>
+                    </div>
+                    {permission.is_missing && (
+                      <span className="text-[10px] font-bold text-destructive uppercase">
+                        Missing Access
+                      </span>
+                    )}
                   </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {permission.privileges?.map((priv) => (
+                      <Badge
+                        key={priv}
+                        variant={permission.is_missing ? "outline" : "secondary"}
+                        className="text-[10px]"
+                      >
+                        {priv}
+                      </Badge>
+                    ))}
+                  </div>
+
                   {permission.is_missing && (
-                    <span className="text-[10px] font-bold text-destructive uppercase">
-                      Missing Access
-                    </span>
+                    <div className="mt-4 pt-4 border-t border-dashed">
+                      <div className="flex items-center justify-between bg-muted p-2 rounded-md">
+                        <code className="text-xs text-muted-foreground truncate mr-2">
+                          {generateGrant(permission)}
+                        </code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() =>
+                            copyToClipboard(generateGrant(permission))
+                          }
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {permission.privileges.map((priv) => (
-                    <Badge
-                      key={priv}
-                      variant={permission.is_missing ? "outline" : "secondary"}
-                      className="text-[10px]"
-                    >
-                      {priv}
-                    </Badge>
-                  ))}
-                </div>
-
-                {permission.is_missing && (
-                  <div className="mt-4 pt-4 border-t border-dashed">
-                    <div className="flex items-center justify-between bg-muted p-2 rounded-md">
-                      <code className="text-xs text-muted-foreground truncate mr-2">
-                        {generateGrant(permission)}
-                      </code>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        onClick={() =>
-                          copyToClipboard(generateGrant(permission))
-                        }
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </ScrollArea>
 
