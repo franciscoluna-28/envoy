@@ -1,7 +1,6 @@
 package projects
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -159,25 +158,19 @@ func (h *Handler) GetProject(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse
 // @Router /projects [get]
 func (h *Handler) GetAllProjects(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("GetAllProjects: Handler called\n")
-
 	userID, ok := auth.GetUserIDFromContext(r.Context())
+
 	if !ok {
-		fmt.Printf("GetAllProjects: User ID not found in context\n")
 		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "User not found in context"})
 		return
 	}
 
-	fmt.Printf("GetAllProjects: User ID extracted: %s\n", userID)
-
 	projects, err := GetAllProjectsByUserID(r.Context(), h.repo, userID)
 	if err != nil {
-		fmt.Printf("GetAllProjects: Error getting projects - %v\n", err)
 		response.WriteJSON(w, http.StatusInternalServerError, response.ErrorResponse{Message: err.Error()})
 		return
 	}
 
-	fmt.Printf("GetAllProjects: Successfully retrieved %d projects\n", len(projects))
 	response.WriteJSON(w, http.StatusOK, projects)
 }
 

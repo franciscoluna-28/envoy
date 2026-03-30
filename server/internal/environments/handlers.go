@@ -1,7 +1,6 @@
 package environments
 
 import (
-	"fmt"
 	"net/http"
 	"newserver/internal/auth"
 	response "newserver/internal/shared"
@@ -186,28 +185,19 @@ func (h *Handler) PreviewEnvironmentSchemaChanges(w http.ResponseWriter, r *http
 func (h *Handler) RunDatabaseMigration(w http.ResponseWriter, r *http.Request) {
 	envID := chi.URLParam(r, "id")
 
-	fmt.Printf("[DEBUG] RunDatabaseMigration handler called with envID: %s\n", envID)
-
 	var req CreateEnvironmentMigrationRequest
 	if err := response.ParseAndValidate(r, h.validator, &req); err != nil {
-		fmt.Printf("[DEBUG] Failed to parse request: %v\n", err)
 		response.WriteValidationError(w, err)
 		return
 	}
 
-	fmt.Printf("[DEBUG] Request parsed successfully: %+v\n", req)
-
 	val := r.Context().Value(auth.UserIDKey)
-	fmt.Printf("[DEBUG] Context value for user_id: %v (type: %T)\n", val, val)
 
 	userID, ok := val.(string)
 	if !ok {
-		fmt.Printf("[DEBUG] Failed to extract user_id from context: ok=%v, val=%v\n", ok, val)
 		response.WriteJSON(w, http.StatusUnauthorized, response.ErrorResponse{Message: "Unauthorized: user_id missing"})
 		return
 	}
-
-	fmt.Printf("[DEBUG] Successfully extracted userID: %s\n", userID)
 
 	req.EnvironmentID = envID
 
