@@ -65,7 +65,6 @@ func GetEnvironmentSchema(ctx context.Context, envID string, repo Repository, ma
 
 	pgConn, err := ConnectAsMigratorHelper(ctx, decryptedURL)
 	if err != nil {
-		fmt.Printf("GetEnvironmentSchema: Database connection failed - %v\n", err)
 		return nil, err
 	}
 	defer pgConn.Close(ctx)
@@ -120,26 +119,37 @@ func UpdateEnvironment(ctx context.Context, envID string, input UpdateEnvironmen
 		return nil, err
 	}
 
-	// Validate new connection
-	connInfo := DatabaseConnection{
-		ConnectionString: input.ConnectionUrl,
+	// Update name if provided
+	if input.Name != nil {
+		env.Name = *input.Name
 	}
 
-	_, err = ValidateDatabaseConnectionAsMigrator(ctx, connInfo)
-	if err != nil {
-		return nil, fmt.Errorf("pre-storage validation failed: %w", err)
+	// Update type if provided
+	if input.Type != nil {
+		env.Type = *input.Type
 	}
 
-	// Encrypt new connection URL
-	encryptedURL, err := EncryptToAes256(input.ConnectionUrl, masterKey)
-	if err != nil {
-		return nil, fmt.Errorf("could not encrypt string: %w", err)
+	// Update connection URL if provided
+	if input.ConnectionUrl != nil {
+		// Validate new connection
+		connInfo := DatabaseConnection{
+			ConnectionString: *input.ConnectionUrl,
+		}
+
+		_, err = ValidateDatabaseConnectionAsMigrator(ctx, connInfo)
+		if err != nil {
+			return nil, fmt.Errorf("pre-storage validation failed: %w", err)
+		}
+
+		// Encrypt new connection URL
+		encryptedURL, err := EncryptToAes256(*input.ConnectionUrl, masterKey)
+		if err != nil {
+			return nil, fmt.Errorf("could not encrypt string: %w", err)
+		}
+
+		env.ConnectionStringEncrypted = string(encryptedURL)
 	}
 
-	// Update environment fields
-	env.Name = input.Name
-	env.Type = input.Type
-	env.ConnectionStringEncrypted = string(encryptedURL)
 	env.UpdatedAt = time.Now()
 
 	err = repo.UpdateEnvironment(ctx, *env)
@@ -173,7 +183,7 @@ func PreviewEnvironmentSchemaChanges(ctx context.Context, envID string, repo Rep
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	// ! Never forget the rollback, we're not playing with CRUDs. This is platform engineering.
+	// ! Never forget the rollback, this is a simulation.
 	defer tx.Rollback(ctx)
 
 	_, err = tx.Exec(ctx, sqlContent)

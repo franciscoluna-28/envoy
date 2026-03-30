@@ -1,16 +1,24 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, Database } from 'lucide-react'
+import { Calendar, Database, MoreHorizontal } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Link } from '@tanstack/react-router'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { Environment } from '@/features/types'
 import { formatDate } from '@/utils/date'
 
 interface EnvironmentCardProps {
   env: Environment
+  onUpdate?: () => void
+  onDelete?: () => void 
 }
 
-export function EnvironmentCard({ env }: EnvironmentCardProps) {
+export function EnvironmentCard({ env, onUpdate }: EnvironmentCardProps) {
   return (
     <Card className="group relative min-w-[350px] shadow-sm hover:shadow-md transition-all duration-300 border-stone-200 p-0 overflow-hidden">
       <CardContent className="p-6">
@@ -39,6 +47,38 @@ export function EnvironmentCard({ env }: EnvironmentCardProps) {
               </div>
             </div>
           </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-stone-100 text-stone-400 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              align="end"
+              className="w-[180px] p-1.5 shadow-xl border-stone-200"
+            >
+              <DropdownMenuItem
+                onClick={onUpdate}
+                className="text-xs font-semibold cursor-pointer px-2.5 py-2 rounded-md transition-colors"
+              >
+                Update Environment
+              </DropdownMenuItem>
+
+            {/*   <Separator className="my-1.5" />
+ */}
+          {/*     <DropdownMenuItem
+                className="text-destructive text-xs font-semibold cursor-pointer px-2.5 py-2 rounded-md hover:bg-red-50 hover:text-red-600 transition-all"
+                onClick={onDelete}
+              >
+                Delete Environment
+              </DropdownMenuItem> */}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-center justify-between gap-3">

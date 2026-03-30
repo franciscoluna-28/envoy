@@ -2,6 +2,7 @@ import type { paths, components } from "@/api/api";
 
 export type Project = paths["/projects"]["get"]["responses"]["200"]["content"]["application/json"][number];
 export type Environment = paths["/projects/{id}/environments"]["get"]["responses"]["200"]["content"]["application/json"][number];
+export type EnviromentUpdateInput = { name: string, id: string };
 export type DatabaseSchemaItem = components["schemas"]["environments.SchemaColumn"];
 export type EnvironmentId = NonNullable<Environment["id"]>;
 export type ProjectId = NonNullable<Project["id"]>;

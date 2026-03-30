@@ -559,6 +559,148 @@
                 }
             }
         },
+        "/environments/{id}/test-permissions-current": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Test database user permissions against current schema",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Test permissions with current schema",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/environments.TestPermissionsWithCurrentSchemaRequest"
+                            }
+                        }
+                    },
+                    "description": "Permission test request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/environments.TablePermission"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/test-permissions-preview": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Test database user permissions against schema changes in a transaction",
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Test permissions with preview schema",
+                "parameters": [
+                    {
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/environments.TestPermissionsRequest"
+                            }
+                        }
+                    },
+                    "description": "Permission test request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/environments.TablePermission"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/shared.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/environments/{id}/validate": {
             "post": {
                 "security": [
@@ -1253,6 +1395,48 @@
                     }
                 }
             },
+            "environments.TablePermission": {
+                "type": "object",
+                "properties": {
+                    "is_missing": {
+                        "type": "boolean"
+                    },
+                    "privileges": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "table_name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "environments.TestPermissionsRequest": {
+                "type": "object",
+                "required": [
+                    "database_user"
+                ],
+                "properties": {
+                    "database_user": {
+                        "type": "string"
+                    },
+                    "sql_content": {
+                        "type": "string"
+                    }
+                }
+            },
+            "environments.TestPermissionsWithCurrentSchemaRequest": {
+                "type": "object",
+                "required": [
+                    "database_user"
+                ],
+                "properties": {
+                    "database_user": {
+                        "type": "string"
+                    }
+                }
+            },
             "environments.TypeofEnvironment": {
                 "type": "string",
                 "enum": [
@@ -1268,11 +1452,6 @@
             },
             "environments.UpdateEnvironmentRequest": {
                 "type": "object",
-                "required": [
-                    "connection_url",
-                    "name",
-                    "type"
-                ],
                 "properties": {
                     "connection_url": {
                         "type": "string"

@@ -513,6 +513,128 @@ const docTemplate = `{
                 }
             }
         },
+        "/environments/{id}/test-permissions-current": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Test database user permissions against current schema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Test permissions with current schema",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Permission test request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/environments.TestPermissionsWithCurrentSchemaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/environments.TablePermission"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/environments/{id}/test-permissions-preview": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Test database user permissions against schema changes in a transaction",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "environments"
+                ],
+                "summary": "Test permissions with preview schema",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Environment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Permission test request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/environments.TestPermissionsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/environments.TablePermission"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/shared.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/environments/{id}/validate": {
             "post": {
                 "security": [
@@ -1142,6 +1264,48 @@ const docTemplate = `{
                 }
             }
         },
+        "environments.TablePermission": {
+            "type": "object",
+            "properties": {
+                "is_missing": {
+                    "type": "boolean"
+                },
+                "privileges": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "table_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "environments.TestPermissionsRequest": {
+            "type": "object",
+            "required": [
+                "database_user"
+            ],
+            "properties": {
+                "database_user": {
+                    "type": "string"
+                },
+                "sql_content": {
+                    "type": "string"
+                }
+            }
+        },
+        "environments.TestPermissionsWithCurrentSchemaRequest": {
+            "type": "object",
+            "required": [
+                "database_user"
+            ],
+            "properties": {
+                "database_user": {
+                    "type": "string"
+                }
+            }
+        },
         "environments.TypeofEnvironment": {
             "type": "string",
             "enum": [
@@ -1157,11 +1321,6 @@ const docTemplate = `{
         },
         "environments.UpdateEnvironmentRequest": {
             "type": "object",
-            "required": [
-                "connection_url",
-                "name",
-                "type"
-            ],
             "properties": {
                 "connection_url": {
                     "type": "string"

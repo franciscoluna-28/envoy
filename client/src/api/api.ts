@@ -566,6 +566,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/environments/{id}/test-permissions-current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test permissions with current schema
+         * @description Test database user permissions against current schema
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Environment ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description Permission test request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["environments.TestPermissionsWithCurrentSchemaRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["environments.TablePermission"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/environments/{id}/test-permissions-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test permissions with preview schema
+         * @description Test database user permissions against schema changes in a transaction
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Environment ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description Permission test request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["environments.TestPermissionsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["environments.TablePermission"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["shared.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/environments/{id}/validate": {
         parameters: {
             query?: never;
@@ -1078,13 +1208,25 @@ export interface components {
             is_nullable?: string;
             table_name?: string;
         };
+        "environments.TablePermission": {
+            is_missing?: boolean;
+            privileges?: string[];
+            table_name?: string;
+        };
+        "environments.TestPermissionsRequest": {
+            database_user: string;
+            sql_content?: string;
+        };
+        "environments.TestPermissionsWithCurrentSchemaRequest": {
+            database_user: string;
+        };
         /** @enum {string} */
         "environments.TypeofEnvironment": "development" | "staging" | "production";
         "environments.UpdateEnvironmentRequest": {
-            connection_url: string;
-            name: string;
+            connection_url?: string;
+            name?: string;
             /** @enum {unknown} */
-            type: "development" | "staging" | "production";
+            type?: "development" | "staging" | "production";
         };
         "projects.CreateProjectRequest": {
             name: string;

@@ -136,6 +136,33 @@ definitions:
       table_name:
         type: string
     type: object
+  environments.TablePermission:
+    properties:
+      is_missing:
+        type: boolean
+      privileges:
+        items:
+          type: string
+        type: array
+      table_name:
+        type: string
+    type: object
+  environments.TestPermissionsRequest:
+    properties:
+      database_user:
+        type: string
+      sql_content:
+        type: string
+    required:
+    - database_user
+    type: object
+  environments.TestPermissionsWithCurrentSchemaRequest:
+    properties:
+      database_user:
+        type: string
+    required:
+    - database_user
+    type: object
   environments.TypeofEnvironment:
     enum:
     - development
@@ -159,10 +186,6 @@ definitions:
         - development
         - staging
         - production
-    required:
-    - connection_url
-    - name
-    - type
     type: object
   projects.CreateProjectRequest:
     properties:
@@ -529,6 +552,84 @@ paths:
       security:
       - BearerAuth: []
       summary: Get environment schema
+      tags:
+      - environments
+  /environments/{id}/test-permissions-current:
+    post:
+      consumes:
+      - application/json
+      description: Test database user permissions against current schema
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission test request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environments.TestPermissionsWithCurrentSchemaRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/environments.TablePermission'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Test permissions with current schema
+      tags:
+      - environments
+  /environments/{id}/test-permissions-preview:
+    post:
+      consumes:
+      - application/json
+      description: Test database user permissions against schema changes in a transaction
+      parameters:
+      - description: Environment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission test request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/environments.TestPermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/environments.TablePermission'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/shared.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Test permissions with preview schema
       tags:
       - environments
   /environments/{id}/validate:

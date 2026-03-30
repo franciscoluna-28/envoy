@@ -1,4 +1,4 @@
-# 🦦 Envoy — PostgreSQL Schema Management, Reimagined
+# 🦦 Envoy — PostgreSQL Control Plane for Schema Migrations and Permissions
 
 <p align="center">
   <img src="readme/logo.png" alt="Envoy Logo" width="160px"/>

@@ -61,3 +61,28 @@ export function useCreateEnvironment() {
     },
   });
 }
+
+export function useUpdateEnvironment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { id: EnvironmentId; name: string }) => {
+      const response = await client.PUT("/environments/{id}", {
+        params: { path: { id: data.id } },
+        body: {
+          name: data.name,
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ENVIRONMENTS_QUERY_KEYS.all,
+      });
+      toast.success("Environment updated successfully!");
+    },
+    onError: () => {
+      toast.error("Failed to update environment");
+    },
+  });
+}

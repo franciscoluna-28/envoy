@@ -101,9 +101,9 @@ type TestPermissionsWithCurrentSchemaRequest struct {
 }
 
 type UpdateEnvironmentRequest struct {
-	Name          string            `json:"name" validate:"required"`
-	Type          TypeofEnvironment `json:"type" validate:"required,oneof=development staging production"`
-	ConnectionUrl string            `json:"connection_url" validate:"required"`
+	Name          *string            `json:"name,omitempty"`
+	Type          *TypeofEnvironment `json:"type,omitempty" validate:"omitempty,oneof=development staging production"`
+	ConnectionUrl *string            `json:"connection_url,omitempty"`
 }
 
 // The entire reason why I built Envoy, to be honest
